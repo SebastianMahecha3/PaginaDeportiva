@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Editar partido')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Editar partido</h1>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+  <section class="tarjeta form-caja" style="max-width:560px">
+    <form class="formulario" th:action="@{/admin/partidos/{id}/editar(id=${partido.id})}" th:object="${partido}" method="post" novalidate>
+      <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+      <input type="hidden" th:field="*{id}">
+      <label for="localId">Equipo local</label>
+      <select id="localId" th:field="*{localId}">
+        <option th:each="e : ${equipos}" th:value="${e.id}" th:text="${e.nombre}">Equipo</option>
+      </select>
+      <div class="error-campo" th:if="${#fields.hasErrors('localId')}" th:errors="*{localId}"></div>
+      <label for="visitanteId">Equipo visitante</label>
+      <select id="visitanteId" th:field="*{visitanteId}">
+        <option th:each="e : ${equipos}" th:value="${e.id}" th:text="${e.nombre}">Equipo</option>
+      </select>
+      <div class="error-campo" th:if="${#fields.hasErrors('visitanteId')}" th:errors="*{visitanteId}"></div>
+      <label for="fechaHora">Fecha y hora</label>
+      <input id="fechaHora" type="datetime-local" th:field="*{fechaHora}">
+      <div class="error-campo" th:if="${#fields.hasErrors('fechaHora')}" th:errors="*{fechaHora}"></div>
+      <p><button class="btn" type="submit">Guardar</button> <a class="btn btn-borde" th:href="@{/admin/partidos}">Cancelar</a></p>
+    </form>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

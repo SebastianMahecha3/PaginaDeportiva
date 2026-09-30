@@ -1,0 +1,25 @@
+/* ===== Modo oscuro (se activa con data-theme="dark" en <html>) ===== */
+[data-theme="dark"] {
+  --fondo: #0b1426;
+  --superficie: #12213d;
+  --texto: #e6edf9;
+  --texto-suave: #9fb0d0;
+  --borde: #263a61;
+  --sombra: 0 2px 10px rgba(0, 0, 0, .45);
+  --azul-100: #1a2f57;
+  --azul-700: #8db7ff;
+  --azul-900: #07101f;
+  --ok: #55d68d;
+  --ok-fondo: #12351f;
+  --mal: #ff8a7d;
+  --mal-fondo: #40191a;
+  --aviso: #ffd75e;
+  --aviso-fondo: #40340c;
+  --gris-fondo: #2a3448;
+}
+[data-theme="dark"] .tabla th { color: #cfe0ff; }
+[data-theme="dark"] .opcion-btn { color: #e6edf9; }
+[data-theme="dark"] .opcion-btn:hover:not(:disabled) { color: #fff; }
+[data-theme="dark"] .estado-CANCELADA, [data-theme="dark"] .estado-CANCELADO, [data-theme="dark"] .estado-INACTIVO { color: #c4cee2; }
+[data-theme="dark"] .hero { background: linear-gradient(135deg, #07101f, #14428f); }
+[data-theme="dark"] .marca .logo-falso { background: #1e63d6; }

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Panel administrador')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Panel administrador</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+  <section class="kpis">
+    <div class="kpi"><div class="num" th:text="${totalEquipos}">0</div>Equipos</div>
+    <div class="kpi"><div class="num" th:text="${totalJugadores}">0</div>Jugadores</div>
+    <div class="kpi"><div class="num" th:text="${partidosPorJugar}">0</div>Partidos por jugar</div>
+    <div class="kpi"><div class="num" th:text="${apuestasPendientes}">0</div>Apuestas pendientes</div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Registro')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('registro')}"></header>
+<main class="contenedor">
+  <div class="tarjeta form-caja">
+    <h1>Crear cuenta</h1>
+    <form class="formulario" th:action="@{/registro}" th:object="${usuario}" method="post" novalidate>
+      <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+      <label for="username">Usuario</label>
+      <input id="username" type="text" th:field="*{username}" maxlength="30" autocomplete="username">
+      <div class="error-campo" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" th:field="*{password}" autocomplete="new-password">
+      <div class="error-campo" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+
+      <label for="confirmarPassword">Confirmar contraseña</label>
+      <input id="confirmarPassword" type="password" th:field="*{confirmarPassword}" autocomplete="new-password">
+      <div class="error-campo" th:if="${#fields.hasErrors('confirmarPassword')}" th:errors="*{confirmarPassword}"></div>
+
+      <p><button class="btn" type="submit">Registrarme</button></p>
+    </form>
+    <p class="suave">¿Ya tienes cuenta? <a th:href="@{/login}">Inicia sesión</a></p>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

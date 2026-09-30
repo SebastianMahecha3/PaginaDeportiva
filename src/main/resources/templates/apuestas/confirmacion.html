@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Apuesta confirmada')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('apuestas')}"></header>
+<main class="contenedor">
+  <div class="tarjeta confirmacion">
+    <img th:src="@{/images/apuesta-confirmada.png}" alt="Apuesta confirmada" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <div class="imagen-falsa" aria-hidden="true">✅</div>
+    <h1>¡Apuesta confirmada!</h1>
+    <p>Tu apuesta <strong th:text="'#' + ${apuesta.id}">#1</strong> quedó registrada como <span class="estado" th:classappend="'estado-' + ${apuesta.estado}" th:text="${apuesta.estado}">PENDIENTE</span>.</p>
+    <div class="resumen-fila"><span>Tipo</span><strong th:text="${apuesta.tipo}">SIMPLE</strong></div>
+    <div class="resumen-fila"><span>Cuota total</span><strong th:text="${#numbers.formatDecimal(apuesta.cuotaTotal, 1, 2)}">2.00</strong></div>
+    <div class="resumen-fila"><span>Cantidad apostada</span><span th:text="${#numbers.formatDecimal(apuesta.montoApostado, 1, 'COMMA', 2, 'POINT')}">100.00</span></div>
+    <div class="resumen-fila total"><span>Ganancia potencial</span><span class="ganancia" th:text="${#numbers.formatDecimal(apuesta.gananciaPotencial, 1, 'COMMA', 2, 'POINT')}">190.00</span></div>
+    <p style="margin-top:1rem">
+      <a class="btn" th:href="@{/mis-apuestas}">Ver mis apuestas</a>
+      <a class="btn btn-borde" th:href="@{/apuestas}">Seguir apostando</a>
+    </p>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

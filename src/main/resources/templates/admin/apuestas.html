@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Apuestas (admin)')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Todas las apuestas</h1>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+  <p class="suave">Vista de solo lectura: el administrador no puede modificar apuestas.</p>
+  <p th:if="${#lists.isEmpty(apuestas)}" class="tarjeta suave">Aún no hay apuestas.</p>
+  <section class="tarjeta tabla-caja" th:unless="${#lists.isEmpty(apuestas)}">
+    <table class="tabla">
+      <thead><tr><th>#</th><th>Usuario</th><th>Fecha</th><th>Tipo</th><th>Selecciones</th><th>Cuota</th><th>Apostado</th><th>Ganancia pot.</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr th:each="a : ${apuestas}">
+          <td th:text="${a.id}">1</td>
+          <td th:text="${a.usuario.username}">usuario</td>
+          <td th:text="${#temporals.format(a.fecha, 'dd/MM/yyyy HH:mm')}">fecha</td>
+          <td th:text="${a.tipo}">SIMPLE</td>
+          <td><div th:each="s : ${a.selecciones}"><span th:text="${s.partidoDescripcion} + ': ' + ${s.descripcion}">A vs B: Local</span> <span class="estado" th:classappend="'estado-' + ${s.estado}" th:text="${s.estado}">PENDIENTE</span></div></td>
+          <td th:text="${#numbers.formatDecimal(a.cuotaTotal, 1, 2)}">2.00</td>
+          <td th:text="${#numbers.formatDecimal(a.montoApostado, 1, 'COMMA', 2, 'POINT')}">100.00</td>
+          <td th:text="${#numbers.formatDecimal(a.gananciaPotencial, 1, 'COMMA', 2, 'POINT')}">190.00</td>
+          <td><span class="estado" th:classappend="'estado-' + ${a.estado}" th:text="${a.estado}">PENDIENTE</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

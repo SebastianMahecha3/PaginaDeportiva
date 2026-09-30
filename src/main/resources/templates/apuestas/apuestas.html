@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Apuestas')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('apuestas')}"></header>
+<main class="contenedor">
+  <h1>Apuestas</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <div sec:authorize="hasRole('ADMIN')" class="aviso-admin">Como administrador solo puedes consultar los mercados; no puedes apostar.</div>
+
+  <div class="disposicion-apuestas">
+    <!-- Mercados por partido -->
+    <section>
+      <p th:if="${#lists.isEmpty(partidos)}" class="tarjeta suave">No hay partidos abiertos para apostar en este momento.</p>
+      <article th:each="p : ${partidos}" class="tarjeta">
+        <div class="partido-fila">
+          <a class="equipos-vs" th:href="@{/partidos/{id}(id=${p.partido.id})}" th:text="${p.partido.descripcion}">A vs B</a>
+          <span class="suave" th:text="${#temporals.format(p.partido.fechaHora, 'dd/MM/yyyy HH:mm')}">fecha</span>
+        </div>
+        <div th:replace="~{fragments/mercados :: grupos(${p}, ${volver})}"></div>
+      </article>
+    </section>
+
+    <!-- Boleto (solo usuarios normales) -->
+    <aside class="tarjeta boleto" sec:authorize="hasRole('USER')">
+      <h2>Mi boleto</h2>
+      <p class="suave" th:if="${#lists.isEmpty(boleto.lineas)}">Aún no has elegido selecciones.</p>
+
+      <div th:each="l, it : ${boleto.lineas}" class="boleto-linea" th:classappend="${l.valida} ? '' : 'invalida'">
+        <div>
+          <div class="partido" th:text="${l.partido}">A vs B</div>
+          <div><strong th:text="${l.mercado}">Mercado</strong> - <span th:text="${l.descripcion}">Selección</span></div>
+          <div th:if="${!l.valida}" th:text="${l.error}">error</div>
+        </div>
+        <div>
+          <div class="cuota" th:if="${l.valida}" th:text="${#numbers.formatDecimal(l.cuota, 1, 2)}">2.00</div>
+          <form th:action="@{/apuestas/boleto/quitar}" method="post">
+            <input type="hidden" name="indice" th:value="${it.index}">
+            <button type="submit" class="btn btn-chico btn-borde" aria-label="Quitar selección">✕</button>
+          </form>
+        </div>
+      </div>
+
+      <th:block th:unless="${#lists.isEmpty(boleto.lineas)}">
+        <div class="resumen-fila"><span>Tipo</span><strong th:text="${boleto.tipo}">SIMPLE</strong></div>
+        <div class="resumen-fila" th:if="${boleto.valido}"><span>Cuota total</span><strong th:text="${#numbers.formatDecimal(boleto.cuotaTotal, 1, 2)}">2.00</strong></div>
+        <p class="suave" th:if="${boleto.tipo.name() == 'PARLEY'}">Parley: la cuota combinada incluye un bonus.</p>
+
+        <form class="formulario" th:action="@{/apuestas/previsualizar}" th:object="${form}" method="post">
+          <label for="monto">Cantidad a apostar</label>
+          <input id="monto" type="number" step="0.01" min="0.01" th:field="*{monto}" placeholder="0.00" required>
+          <p>
+            <button type="submit" class="btn" th:disabled="${!boleto.valido}">Ver ganancia potencial</button>
+          </p>
+        </form>
+        <form th:action="@{/apuestas/boleto/vaciar}" method="post">
+          <button type="submit" class="btn btn-borde btn-chico">Vaciar boleto</button>
+        </form>
+      </th:block>
+    </aside>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

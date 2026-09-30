@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Partidos')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('partidos')}"></header>
+<main class="contenedor">
+  <h1>Partidos</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <div class="pestanas">
+    <a class="btn" th:classappend="${vista == 'proximos'} ? '' : 'btn-borde'" th:href="@{/partidos(vista='proximos')}">Próximos</a>
+    <a class="btn" th:classappend="${vista == 'anteriores'} ? '' : 'btn-borde'" th:href="@{/partidos(vista='anteriores')}">Anteriores</a>
+  </div>
+  <p th:if="${#lists.isEmpty(partidos)}" class="tarjeta suave">No hay partidos para mostrar.</p>
+  <article th:each="p : ${partidos}" class="tarjeta">
+    <div class="partido-fila">
+      <div>
+        <a class="equipos-vs" th:href="@{/partidos/{id}(id=${p.id})}" th:text="${p.descripcion}">A vs B</a>
+        <div class="suave" th:text="${#temporals.format(p.fechaHora, 'dd/MM/yyyy HH:mm')}">fecha</div>
+      </div>
+      <span th:if="${p.estado.name() == 'FINALIZADO'}" class="marcador">
+        <span th:text="${p.golesLocal}">0</span> - <span th:text="${p.golesVisitante}">0</span>
+      </span>
+      <span class="estado" th:classappend="'estado-' + ${p.estado}" th:text="${p.estado}">PROGRAMADO</span>
+    </div>
+  </article>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

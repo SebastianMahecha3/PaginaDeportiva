@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Resultados (admin)')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Registrar resultados</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+  <p th:if="${#lists.isEmpty(partidos)}" class="tarjeta suave">No hay partidos pendientes de resultado.</p>
+  <article th:each="p : ${partidos}" class="tarjeta partido-fila">
+    <div>
+      <strong th:text="${p.descripcion}">A vs B</strong>
+      <div class="suave" th:text="${#temporals.format(p.fechaHora, 'dd/MM/yyyy HH:mm')}">fecha</div>
+    </div>
+    <span class="estado" th:classappend="'estado-' + ${p.estado}" th:text="${p.estado}">PROGRAMADO</span>
+    <a class="btn" th:href="@{/admin/resultados/{id}(id=${p.id})}">Registrar resultado</a>
+  </article>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

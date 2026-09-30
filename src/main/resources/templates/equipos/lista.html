@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Equipos')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('equipos')}"></header>
+<main class="contenedor">
+  <h1>Equipos</h1>
+  <p th:if="${#lists.isEmpty(equipos)}" class="tarjeta suave">Todavía no hay equipos registrados.</p>
+  <div class="rejilla">
+    <a th:each="e : ${equipos}" class="tarjeta" style="text-decoration:none" th:href="@{/equipos/{id}(id=${e.id})}">
+      <h3 th:text="${e.nombre}">Equipo</h3>
+      <p class="suave" th:text="${e.descripcion}">Descripción</p>
+    </a>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

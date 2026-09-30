@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Inicio')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('inicio')}"></header>
+<main class="contenedor">
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+
+  <section class="hero">
+    <h1>Liga Not FIFA 2026</h1>
+    <p>Sigue los partidos, consulta los equipos y apuesta con cuotas claras.</p>
+    <a class="btn btn-borde" th:href="@{/partidos}">Ver partidos</a>
+    <a class="btn btn-borde" th:href="@{/equipos}">Ver equipos</a>
+    <a sec:authorize="!isAuthenticated()" class="btn btn-borde" th:href="@{/registro}">Crear cuenta</a>
+  </section>
+
+  <section>
+    <h2>Próximos partidos</h2>
+    <p th:if="${#lists.isEmpty(proximos)}" class="tarjeta suave">Todavía no hay partidos programados.</p>
+    <div class="rejilla-2">
+      <article th:each="p : ${proximos}" class="tarjeta">
+        <div class="partido-fila">
+          <a class="equipos-vs" th:href="@{/partidos/{id}(id=${p.partido.id})}" th:text="${p.partido.descripcion}">A vs B</a>
+          <span class="suave" th:text="${#temporals.format(p.partido.fechaHora, 'dd/MM/yyyy HH:mm')}">01/01/2026 18:00</span>
+        </div>
+        <th:block th:if="${p.apostable}"><div th:replace="~{fragments/mercados :: grupos(${p}, ${volver})}"></div></th:block>
+        <p th:unless="${p.apostable}" class="suave">Apuestas cerradas.</p>
+        <a class="btn btn-chico btn-borde" th:href="@{/partidos/{id}(id=${p.partido.id})}">Más mercados</a>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Resultados recientes</h2>
+    <p th:if="${#lists.isEmpty(recientes)}" class="tarjeta suave">Aún no hay resultados registrados.</p>
+    <div class="tarjeta" th:unless="${#lists.isEmpty(recientes)}">
+      <div class="partido-fila" th:each="p : ${recientes}" style="padding:.35rem 0;border-bottom:1px solid var(--borde)">
+        <a th:href="@{/partidos/{id}(id=${p.id})}" th:text="${p.local.nombre}">Local</a>
+        <span class="marcador"><span th:text="${p.golesLocal}">0</span> - <span th:text="${p.golesVisitante}">0</span></span>
+        <a th:href="@{/partidos/{id}(id=${p.id})}" th:text="${p.visitante.nombre}">Visitante</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Equipos</h2>
+    <p th:if="${#lists.isEmpty(equipos)}" class="tarjeta suave">Todavía no hay equipos registrados.</p>
+    <div class="rejilla">
+      <a th:each="e : ${equipos}" class="tarjeta" style="text-decoration:none" th:href="@{/equipos/{id}(id=${e.id})}">
+        <h3 th:text="${e.nombre}">Equipo</h3>
+        <span class="suave" th:text="${e.descripcion}">Descripción</span>
+      </a>
+    </div>
+  </section>
+
+  <div th:replace="~{fragments/layout :: patrocinadores}"></div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

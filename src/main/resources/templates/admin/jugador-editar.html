@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Editar jugador')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Editar jugador</h1>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+  <section class="tarjeta form-caja" style="max-width:560px">
+    <form class="formulario" th:action="@{/admin/jugadores/{id}/editar(id=${jugador.id})}" th:object="${jugador}" method="post" novalidate>
+      <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+      <input type="hidden" th:field="*{id}">
+      <label for="nombre">Nombre</label>
+      <input id="nombre" type="text" th:field="*{nombre}" maxlength="80">
+      <div class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+      <label for="dorsal">Dorsal (1-99)</label>
+      <input id="dorsal" type="number" min="1" max="99" th:field="*{dorsal}">
+      <div class="error-campo" th:if="${#fields.hasErrors('dorsal')}" th:errors="*{dorsal}"></div>
+      <label for="equipoId">Equipo</label>
+      <select id="equipoId" th:field="*{equipoId}">
+        <option th:each="e : ${equipos}" th:value="${e.id}" th:text="${e.nombre}">Equipo</option>
+      </select>
+      <div class="error-campo" th:if="${#fields.hasErrors('equipoId')}" th:errors="*{equipoId}"></div>
+      <label for="posicion">Posición</label>
+      <select id="posicion" th:field="*{posicion}">
+        <option th:each="pos : ${posiciones}" th:value="${pos}" th:text="${pos.etiqueta}">Delantero</option>
+      </select>
+      <div class="error-campo" th:if="${#fields.hasErrors('posicion')}" th:errors="*{posicion}"></div>
+      <label for="media">Media (1-99)</label>
+      <input id="media" type="number" min="1" max="99" th:field="*{media}">
+      <div class="error-campo" th:if="${#fields.hasErrors('media')}" th:errors="*{media}"></div>
+      <p><button class="btn" type="submit">Guardar</button> <a class="btn btn-borde" th:href="@{/admin/jugadores}">Cancelar</a></p>
+    </form>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

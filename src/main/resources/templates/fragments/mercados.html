@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6" lang="es">
+
+<!-- Un botón de apuesta. Envía SOLO qué se apuesta; la cuota la calcula el servidor. -->
+<div th:fragment="opcion(o, volver)">
+  <form th:if="${o.cuota != null}" sec:authorize="hasRole('USER')" th:action="@{/apuestas/boleto/agregar}" method="post">
+    <input type="hidden" name="partidoId" th:value="${o.seleccion.partidoId}">
+    <input type="hidden" name="mercado" th:value="${o.seleccion.mercado}">
+    <input type="hidden" name="opcion" th:value="${o.seleccion.opcion}">
+    <input type="hidden" name="linea" th:if="${o.seleccion.linea != null}" th:value="${o.seleccion.linea}">
+    <input type="hidden" name="lado" th:if="${o.seleccion.lado != null}" th:value="${o.seleccion.lado}">
+    <input type="hidden" name="jugadorId" th:if="${o.seleccion.jugadorId != null}" th:value="${o.seleccion.jugadorId}">
+    <input type="hidden" name="volver" th:value="${volver}">
+    <button type="submit" class="opcion-btn">
+      <span class="etq" th:text="${o.etiqueta}">Local</span>
+      <span class="cuota" th:text="${#numbers.formatDecimal(o.cuota, 1, 2)}">2.00</span>
+    </button>
+  </form>
+  <!-- Visitante o administrador: solo consulta -->
+  <button th:if="${o.cuota != null}" sec:authorize="!hasRole('USER')" type="button" class="opcion-btn" disabled>
+    <span class="etq" th:text="${o.etiqueta}">Local</span>
+    <span class="cuota" th:text="${#numbers.formatDecimal(o.cuota, 1, 2)}">2.00</span>
+  </button>
+  <button th:if="${o.cuota == null}" type="button" class="opcion-btn" disabled>
+    <span class="etq" th:text="${o.etiqueta}">Local</span>
+    <span class="sin-cuota">Cuota no disponible</span>
+  </button>
+</div>
+
+<!-- Todos los mercados de un partido -->
+<div th:fragment="grupos(apuesta, volver)">
+  <div th:each="g : ${apuesta.grupos}" class="mercado">
+    <h4 th:text="${g.titulo}">Goles totales</h4>
+    <div class="opciones">
+      <th:block th:each="o : ${g.opciones}">
+        <div th:replace="~{fragments/mercados :: opcion(${o}, ${volver})}"></div>
+      </th:block>
+    </div>
+  </div>
+</div>
+
+</html>

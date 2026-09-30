@@ -1,0 +1,157 @@
+/* ===== Liga Not FIFA 2026 - estilos base (tema claro por defecto) ===== */
+:root {
+  --azul-900: #0a2a5e;
+  --azul-700: #123f8c;
+  --azul-500: #1e63d6;
+  --azul-300: #6ea3f5;
+  --azul-100: #e3eeff;
+  --fondo: #f3f7fd;
+  --superficie: #ffffff;
+  --texto: #14213d;
+  --texto-suave: #55627d;
+  --borde: #d5e0f2;
+  --sombra: 0 2px 10px rgba(10, 42, 94, .10);
+  --ok: #1e8e4e;
+  --ok-fondo: #dff5e8;
+  --mal: #c0392b;
+  --mal-fondo: #fde4e1;
+  --aviso: #8a6d00;
+  --aviso-fondo: #fff4cc;
+  --gris-fondo: #e6e9ef;
+  --radio: 12px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+main.contenedor { flex: 1; }
+.contenedor { width: 100%; max-width: 1100px; margin: 0 auto; padding: 1.25rem 1rem; }
+h1, h2, h3 { color: var(--azul-700); line-height: 1.2; margin: 0 0 .75rem; }
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem; }
+a { color: var(--azul-500); }
+img { max-width: 100%; height: auto; }
+.suave { color: var(--texto-suave); font-size: .92rem; }
+.centrado { text-align: center; }
+
+/* ----- tarjetas y rejillas ----- */
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.rejilla { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.rejilla-2 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+/* ----- hero ----- */
+.hero {
+  background: linear-gradient(135deg, var(--azul-900), var(--azul-500));
+  color: #fff;
+  border-radius: var(--radio);
+  padding: 2rem 1.25rem;
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+.hero h1 { color: #fff; font-size: 2rem; }
+.hero p { margin: .25rem 0 1rem; opacity: .92; }
+
+/* ----- botones ----- */
+.btn {
+  display: inline-block;
+  border: 1px solid var(--azul-500);
+  background: var(--azul-500);
+  color: #fff;
+  padding: .5rem 1rem;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn:hover { background: var(--azul-700); border-color: var(--azul-700); }
+.btn-borde { background: transparent; color: var(--azul-500); }
+.btn-borde:hover { background: var(--azul-100); color: var(--azul-700); }
+.btn-peligro { background: var(--mal); border-color: var(--mal); }
+.btn-peligro:hover { background: #962d22; border-color: #962d22; }
+.btn-chico { padding: .25rem .6rem; font-size: .85rem; }
+.hero .btn-borde { color: #fff; border-color: #fff; }
+.hero .btn-borde:hover { background: rgba(255, 255, 255, .18); }
+.btn[disabled], .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ----- formularios ----- */
+.formulario label { display: block; font-weight: 600; margin: .75rem 0 .25rem; }
+.formulario input, .formulario select, .formulario textarea, input.entrada, select.entrada {
+  width: 100%;
+  padding: .55rem .7rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font: inherit;
+  background: var(--superficie);
+  color: var(--texto);
+}
+.formulario input:focus, .formulario select:focus, .formulario textarea:focus {
+  outline: 2px solid var(--azul-300);
+  border-color: var(--azul-500);
+}
+.form-caja { max-width: 440px; margin: 1.5rem auto; }
+.error-campo { color: var(--mal); font-size: .88rem; margin-top: .2rem; }
+.fila-form { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); align-items: end; }
+
+/* ----- mensajes ----- */
+.mensaje { padding: .7rem 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid transparent; }
+.mensaje.ok { background: var(--ok-fondo); color: var(--ok); border-color: var(--ok); }
+.mensaje.error { background: var(--mal-fondo); color: var(--mal); border-color: var(--mal); }
+.mensaje.info { background: var(--azul-100); color: var(--azul-700); border-color: var(--azul-300); }
+
+/* ----- tablas ----- */
+.tabla-caja { overflow-x: auto; }
+table.tabla { width: 100%; border-collapse: collapse; }
+.tabla th, .tabla td { padding: .55rem .6rem; text-align: left; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+.tabla th { background: var(--azul-100); color: var(--azul-700); font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+
+/* ----- insignias de estado ----- */
+.estado { display: inline-block; padding: .12rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+.estado-PENDIENTE, .estado-PROGRAMADO, .estado-EN_JUEGO { background: var(--aviso-fondo); color: var(--aviso); }
+.estado-GANADA, .estado-FINALIZADO, .estado-ACTIVO { background: var(--ok-fondo); color: var(--ok); }
+.estado-PERDIDA { background: var(--mal-fondo); color: var(--mal); }
+.estado-CANCELADA, .estado-CANCELADO, .estado-INACTIVO { background: var(--gris-fondo); color: #555e70; }
+
+/* ----- partidos ----- */
+.partido-fila { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.equipos-vs { font-weight: 700; font-size: 1.05rem; }
+.marcador { font-size: 1.6rem; font-weight: 800; color: var(--azul-700); }
+.pestanas { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+
+/* ----- patrocinadores ----- */
+.patrocinadores { margin-top: 1.5rem; }
+.patrocinador { text-align: center; }
+.patrocinador .foto {
+  width: 96px; height: 96px; margin: 0 auto .5rem; border-radius: 50%;
+  background: var(--azul-100); border: 2px dashed var(--azul-300);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 800; color: var(--azul-500); overflow: hidden;
+}
+.patrocinador .foto img { width: 100%; height: 100%; object-fit: cover; }
+.patrocinador .rol { color: var(--texto-suave); font-size: .9rem; }
+
+/* ----- pie ----- */
+.pie { background: var(--azul-900); color: #d6e4ff; text-align: center; padding: 1rem; font-size: .9rem; margin-top: 2rem; }
+
+@media (max-width: 600px) {
+  h1 { font-size: 1.5rem; }
+  .hero h1 { font-size: 1.6rem; }
+  .marcador { font-size: 1.3rem; }
+}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6" lang="es">
+
+<!-- Cabecera común: <head th:replace="~{fragments/layout :: cabecera('Título')}"></head> -->
+<head th:fragment="cabecera(titulo)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${titulo} + ' | Liga Not FIFA 2026'">Liga Not FIFA 2026</title>
+  <!-- Aplica el tema guardado antes de pintar para evitar el parpadeo claro/oscuro -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('tema');
+        if (!t) { t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/navbar.css}">
+  <link rel="stylesheet" th:href="@{/css/apuestas.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" th:href="@{/css/dark-mode.css}">
+</head>
+
+<!-- Barra de navegación: cambia según el rol (visitante, usuario, administrador) -->
+<header th:fragment="navbar(activo)" class="navbar">
+  <div class="navbar-interior">
+    <a class="marca" th:href="@{/}">
+      <img th:src="@{/images/logo.png}" alt="Logo Liga Not FIFA" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span class="logo-falso">LNF</span>
+      <span>Liga Not FIFA 2026</span>
+    </a>
+    <div class="acciones-nav">
+      <button type="button" id="tema-btn" class="tema-btn" aria-label="Cambiar tema">🌙</button>
+      <button type="button" id="menu-btn" class="menu-btn" aria-label="Abrir menú" aria-expanded="false">☰</button>
+    </div>
+    <nav id="enlaces" class="enlaces" aria-label="Navegación principal">
+      <!-- Visitante -->
+      <th:block sec:authorize="!isAuthenticated()">
+        <a th:href="@{/}" th:classappend="${activo == 'inicio'} ? 'activo'">Inicio</a>
+        <a th:href="@{/partidos}" th:classappend="${activo == 'partidos'} ? 'activo'">Partidos</a>
+        <a th:href="@{/equipos}" th:classappend="${activo == 'equipos'} ? 'activo'">Equipos</a>
+        <a th:href="@{/login}" th:classappend="${activo == 'login'} ? 'activo'">Iniciar sesión</a>
+        <a th:href="@{/registro}" th:classappend="${activo == 'registro'} ? 'activo'">Registrarse</a>
+      </th:block>
+      <!-- Usuario normal -->
+      <th:block sec:authorize="hasRole('USER')">
+        <a th:href="@{/}" th:classappend="${activo == 'inicio'} ? 'activo'">Inicio</a>
+        <a th:href="@{/partidos}" th:classappend="${activo == 'partidos'} ? 'activo'">Partidos</a>
+        <a th:href="@{/equipos}" th:classappend="${activo == 'equipos'} ? 'activo'">Equipos</a>
+        <a th:href="@{/apuestas}" th:classappend="${activo == 'apuestas'} ? 'activo'">Apuestas</a>
+        <a th:href="@{/mis-apuestas}" th:classappend="${activo == 'mis-apuestas'} ? 'activo'">Mis apuestas</a>
+        <a th:href="@{/perfil}" th:classappend="${activo == 'perfil'} ? 'activo'">Perfil</a>
+        <form th:action="@{/logout}" method="post"><button type="submit" class="enlace-btn">Cerrar sesión</button></form>
+      </th:block>
+      <!-- Administrador (Egoisu) -->
+      <th:block sec:authorize="hasRole('ADMIN')">
+        <a th:href="@{/}" th:classappend="${activo == 'inicio'} ? 'activo'">Inicio</a>
+        <a th:href="@{/partidos}" th:classappend="${activo == 'partidos'} ? 'activo'">Partidos</a>
+        <a th:href="@{/equipos}" th:classappend="${activo == 'equipos'} ? 'activo'">Equipos</a>
+        <a th:href="@{/apuestas}" th:classappend="${activo == 'apuestas'} ? 'activo'">Apuestas</a>
+        <a th:href="@{/admin}" th:classappend="${activo == 'admin'} ? 'activo'">Panel administrador</a>
+        <form th:action="@{/logout}" method="post"><button type="submit" class="enlace-btn">Cerrar sesión</button></form>
+      </th:block>
+    </nav>
+  </div>
+</header>
+
+<!-- Mensajes flash (ok / error) -->
+<div th:fragment="mensajes">
+  <div th:if="${ok}" class="mensaje ok" role="status" th:text="${ok}"></div>
+  <div th:if="${error}" class="mensaje error" role="alert" th:text="${error}"></div>
+</div>
+
+<!-- Errores globales del formulario (reglas de negocio) -->
+<div th:fragment="erroresGlobales">
+  <div th:if="${#fields.hasGlobalErrors()}" class="mensaje error" role="alert">
+    <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+  </div>
+</div>
+
+<!-- Submenú del panel de administración -->
+<div th:fragment="adminMenu" class="pestanas">
+  <a class="btn btn-chico btn-borde" th:href="@{/admin}">Panel</a>
+  <a class="btn btn-chico btn-borde" th:href="@{/admin/equipos}">Equipos</a>
+  <a class="btn btn-chico btn-borde" th:href="@{/admin/jugadores}">Jugadores</a>
+  <a class="btn btn-chico btn-borde" th:href="@{/admin/partidos}">Partidos</a>
+  <a class="btn btn-chico btn-borde" th:href="@{/admin/resultados}">Resultados</a>
+  <a class="btn btn-chico btn-borde" th:href="@{/admin/apuestas}">Apuestas</a>
+</div>
+
+<!-- Sección PATROCINADORES (solo se incluye en el inicio). Las fotos son opcionales: sin archivo se ve un círculo con la inicial. -->
+<section th:fragment="patrocinadores" class="patrocinadores">
+  <h2 class="centrado">PATROCINADORES</h2>
+  <div class="rejilla">
+    <div class="tarjeta patrocinador">
+      <div class="foto"><img th:src="@{/images/patrocinadores/tique.png}" alt="Tique" onerror="this.remove()"><span>T</span></div>
+      <h3>Tique</h3><div class="rol">Fundador</div>
+    </div>
+    <div class="tarjeta patrocinador">
+      <div class="foto"><img th:src="@{/images/patrocinadores/kori.png}" alt="Kori" onerror="this.remove()"><span>K</span></div>
+      <h3>Kori</h3><div class="rol">Co-Fundador</div>
+    </div>
+    <div class="tarjeta patrocinador">
+      <div class="foto"><img th:src="@{/images/patrocinadores/wombet.png}" alt="Wombet" onerror="this.remove()"><span>W</span></div>
+      <h3>Wombet</h3><div class="rol">Néstor - Encargado de las apuestas</div>
+    </div>
+    <div class="tarjeta patrocinador">
+      <div class="foto"><img th:src="@{/images/patrocinadores/lucho.png}" alt="Lucho" onerror="this.remove()"><span>L</span></div>
+      <h3>Lucho</h3><div class="rol">Cuasi diseñador industrial - Encargado de los artes oficiales</div>
+    </div>
+    <div class="tarjeta patrocinador">
+      <div class="foto"><img th:src="@{/images/patrocinadores/char.png}" alt="Char" onerror="this.remove()"><span>C</span></div>
+      <h3>Char</h3><div class="rol">Desarrollador de la página web</div>
+    </div>
+  </div>
+</section>
+
+<!-- Pie de página con año automático -->
+<footer th:fragment="footer" class="pie">
+  <p>© <span th:text="${#temporals.year(#temporals.createNow())}">2026</span> Liga Not FIFA 2026. Todos los derechos reservados.</p>
+  <script th:src="@{/js/main.js}"></script>
+</footer>
+
+</html>

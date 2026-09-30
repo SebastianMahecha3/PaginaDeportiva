@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Partidos (admin)')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Partidos</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+
+  <section class="tarjeta">
+    <h2>Programar partido</h2>
+    <form class="formulario" th:action="@{/admin/partidos/crear}" th:object="${partido}" method="post" novalidate>
+      <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+      <div class="fila-form">
+        <div>
+          <label for="localId">Equipo local</label>
+          <select id="localId" th:field="*{localId}">
+            <option value="">Selecciona...</option>
+            <option th:each="e : ${equipos}" th:value="${e.id}" th:text="${e.nombre}">Equipo</option>
+          </select>
+          <div class="error-campo" th:if="${#fields.hasErrors('localId')}" th:errors="*{localId}"></div>
+        </div>
+        <div>
+          <label for="visitanteId">Equipo visitante</label>
+          <select id="visitanteId" th:field="*{visitanteId}">
+            <option value="">Selecciona...</option>
+            <option th:each="e : ${equipos}" th:value="${e.id}" th:text="${e.nombre}">Equipo</option>
+          </select>
+          <div class="error-campo" th:if="${#fields.hasErrors('visitanteId')}" th:errors="*{visitanteId}"></div>
+        </div>
+        <div>
+          <label for="fechaHora">Fecha y hora</label>
+          <input id="fechaHora" type="datetime-local" th:field="*{fechaHora}">
+          <div class="error-campo" th:if="${#fields.hasErrors('fechaHora')}" th:errors="*{fechaHora}"></div>
+        </div>
+      </div>
+      <p><button class="btn" type="submit">Programar partido</button></p>
+    </form>
+  </section>
+
+  <section class="tarjeta tabla-caja">
+    <table class="tabla">
+      <thead><tr><th>Partido</th><th>Fecha</th><th>Estado</th><th>Resultado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <tr th:each="p : ${partidos}">
+          <td th:text="${p.descripcion}">A vs B</td>
+          <td th:text="${#temporals.format(p.fechaHora, 'dd/MM/yyyy HH:mm')}">fecha</td>
+          <td><span class="estado" th:classappend="'estado-' + ${p.estado}" th:text="${p.estado}">PROGRAMADO</span></td>
+          <td th:text="${p.estado.name() == 'FINALIZADO'} ? ${p.golesLocal} + ' - ' + ${p.golesVisitante} : '—'">—</td>
+          <td class="acciones-tabla">
+            <a th:if="${p.estado.name() == 'PROGRAMADO'}" class="btn btn-chico btn-borde" th:href="@{/admin/partidos/{id}/editar(id=${p.id})}">Editar</a>
+            <form th:if="${p.estado.name() == 'PROGRAMADO'}" th:action="@{/admin/partidos/{id}/iniciar(id=${p.id})}" method="post">
+              <button class="btn btn-chico" type="submit">Iniciar</button>
+            </form>
+            <a th:if="${p.estado.name() == 'PROGRAMADO' or p.estado.name() == 'EN_JUEGO'}" class="btn btn-chico" th:href="@{/admin/resultados/{id}(id=${p.id})}">Resultado</a>
+            <form th:if="${p.estado.name() == 'PROGRAMADO' or p.estado.name() == 'EN_JUEGO'}" th:action="@{/admin/partidos/{id}/cancelar(id=${p.id})}" method="post">
+              <button class="btn btn-chico btn-peligro" type="submit">Cancelar</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('No encontrado')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('')}"></header>
+<main class="contenedor centrado">
+  <div class="tarjeta form-caja">
+    <h1>404 - No encontrado</h1>
+    <p th:text="${mensaje} ?: 'La página o el recurso que buscas no existe.'">Mensaje</p>
+    <a class="btn" th:href="@{/}">Volver al inicio</a>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

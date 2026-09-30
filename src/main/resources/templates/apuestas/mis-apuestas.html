@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Mis apuestas')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('mis-apuestas')}"></header>
+<main class="contenedor">
+  <h1>Mis apuestas</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <p th:if="${#lists.isEmpty(apuestas)}" class="tarjeta suave">Todavía no has hecho apuestas. <a th:href="@{/apuestas}">Ir a apostar</a></p>
+  <article th:each="a : ${apuestas}" class="tarjeta apuesta-card">
+    <div class="cabecera">
+      <strong th:text="'Apuesta #' + ${a.id} + ' - ' + ${a.tipo}">Apuesta #1</strong>
+      <span class="estado" th:classappend="'estado-' + ${a.estado}" th:text="${a.estado}">PENDIENTE</span>
+    </div>
+    <p class="suave" th:text="${#temporals.format(a.fecha, 'dd/MM/yyyy HH:mm')}">fecha</p>
+    <ul>
+      <li th:each="s : ${a.selecciones}">
+        <span th:text="${s.partidoDescripcion}">A vs B</span> -
+        <strong th:text="${s.descripcion}">Selección</strong>
+        (cuota <span th:text="${#numbers.formatDecimal(s.cuota, 1, 2)}">2.00</span>)
+        <span class="estado" th:classappend="'estado-' + ${s.estado}" th:text="${s.estado}">PENDIENTE</span>
+      </li>
+    </ul>
+    <div class="resumen-fila"><span>Cuota total</span><strong th:text="${#numbers.formatDecimal(a.cuotaTotal, 1, 2)}">2.00</strong></div>
+    <div class="resumen-fila"><span>Apostado</span><span th:text="${#numbers.formatDecimal(a.montoApostado, 1, 'COMMA', 2, 'POINT')}">100.00</span></div>
+    <div class="resumen-fila"><span>Ganancia potencial</span><strong th:text="${#numbers.formatDecimal(a.gananciaPotencial, 1, 'COMMA', 2, 'POINT')}">190.00</strong></div>
+  </article>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Detalle del partido')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('partidos')}"></header>
+<main class="contenedor">
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <section class="tarjeta centrado">
+    <h1 th:text="${partido.descripcion}">A vs B</h1>
+    <p class="suave" th:text="${#temporals.format(partido.fechaHora, 'dd/MM/yyyy HH:mm')}">fecha</p>
+    <span class="estado" th:classappend="'estado-' + ${partido.estado}" th:text="${partido.estado}">PROGRAMADO</span>
+    <p th:if="${partido.estado.name() == 'FINALIZADO'}" class="marcador">
+      <span th:text="${partido.golesLocal}">0</span> - <span th:text="${partido.golesVisitante}">0</span>
+    </p>
+  </section>
+
+  <section class="tarjeta" th:if="${partido.estado.name() == 'FINALIZADO' and partido.estadistica != null}">
+    <h2>Estadísticas</h2>
+    <div class="tabla-caja">
+      <table class="tabla">
+        <thead><tr><th th:text="${partido.local.nombre}">Local</th><th></th><th th:text="${partido.visitante.nombre}">Visitante</th></tr></thead>
+        <tbody>
+          <tr><td th:text="${partido.golesLocal}">0</td><td>Goles</td><td th:text="${partido.golesVisitante}">0</td></tr>
+          <tr><td th:text="${partido.estadistica.tirosLocal}">0</td><td>Tiros</td><td th:text="${partido.estadistica.tirosVisitante}">0</td></tr>
+          <tr><td th:text="${partido.estadistica.cornersLocal}">0</td><td>Tiros de esquina</td><td th:text="${partido.estadistica.cornersVisitante}">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 style="margin-top:1rem">Goleadores</h3>
+    <p class="suave" th:if="${#lists.isEmpty(partido.goles)}">Sin goles registrados.</p>
+    <ul th:unless="${#lists.isEmpty(partido.goles)}">
+      <li th:each="g : ${partido.goles}">
+        <span th:text="${g.minuto} + ''">10</span>' -
+        <strong th:text="${g.jugador.nombre}">Jugador</strong>
+        (<span th:text="${g.jugador.equipo.nombre}">Equipo</span>)
+      </li>
+    </ul>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Mercados de apuestas</h2>
+    <div th:if="${apuesta.apostable}">
+      <p class="suave" sec:authorize="!isAuthenticated()">
+        <a th:href="@{/login}">Inicia sesión</a> para apostar.
+      </p>
+      <div th:replace="~{fragments/mercados :: grupos(${apuesta}, ${volver})}"></div>
+      <a class="btn btn-borde" th:href="@{/apuestas}">Ir a mi boleto</a>
+    </div>
+    <p th:unless="${apuesta.apostable}" class="suave">Las apuestas para este partido están cerradas.</p>
+  </section>
+  <a class="btn btn-borde" th:href="@{/partidos}">← Volver a partidos</a>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Confirmar apuesta')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('apuestas')}"></header>
+<main class="contenedor">
+  <div class="tarjeta form-caja" style="max-width:560px">
+    <h1>Confirma tu apuesta</h1>
+    <div class="boleto-linea" th:each="l : ${resumen.lineas}">
+      <div>
+        <div class="partido" th:text="${l.partido}">A vs B</div>
+        <div><strong th:text="${l.mercado}">Mercado</strong> - <span th:text="${l.descripcion}">Selección</span></div>
+      </div>
+      <div class="cuota" th:text="${#numbers.formatDecimal(l.cuota, 1, 2)}">2.00</div>
+    </div>
+
+    <div class="resumen-fila"><span>Tipo</span><strong th:text="${resumen.tipo}">SIMPLE</strong></div>
+    <div class="resumen-fila"><span>Cuota base</span><span th:text="${#numbers.formatDecimal(resumen.cuotaBase, 1, 2)}">2.00</span></div>
+    <div class="resumen-fila" th:if="${resumen.bonusParley != null and resumen.bonusParley.signum() > 0}">
+      <span>Bonus parley</span><span th:text="${#numbers.formatDecimal(resumen.bonusParley, 1, 2)}">0.00</span>
+    </div>
+    <div class="resumen-fila"><span>Cuota total</span><strong th:text="${#numbers.formatDecimal(resumen.cuotaTotal, 1, 2)}">2.00</strong></div>
+    <div class="resumen-fila"><span>Cantidad apostada</span><span th:text="${#numbers.formatDecimal(resumen.monto, 1, 'COMMA', 2, 'POINT')}">100.00</span></div>
+    <div class="resumen-fila"><span>Comisión (5%)</span><span th:text="${#numbers.formatDecimal(resumen.comision, 1, 'COMMA', 2, 'POINT')}">5.00</span></div>
+    <div class="resumen-fila"><span>Monto neto</span><span th:text="${#numbers.formatDecimal(resumen.montoNeto, 1, 'COMMA', 2, 'POINT')}">95.00</span></div>
+    <div class="resumen-fila total"><span>Ganancia potencial</span><span class="ganancia" th:text="${#numbers.formatDecimal(resumen.gananciaPotencial, 1, 'COMMA', 2, 'POINT')}">190.00</span></div>
+
+    <form th:action="@{/apuestas/confirmar}" method="post" style="margin-top:1rem">
+      <input type="hidden" name="monto" th:value="${resumen.monto}">
+      <input type="hidden" name="cuotaMostrada" th:value="${resumen.cuotaTotal}">
+      <button class="btn" type="submit">Confirmar apuesta</button>
+      <a class="btn btn-borde" th:href="@{/apuestas}">Volver al boleto</a>
+    </form>
+    <p class="suave">La cuota y la ganancia las calcula el servidor al confirmar. Si la cuota cambia, te avisaremos.</p>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

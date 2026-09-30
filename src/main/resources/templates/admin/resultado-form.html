@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Registrar resultado')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Resultado: <span th:text="${partidoEntidad.descripcion}">A vs B</span></h1>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+  <p class="aviso-admin">Al guardar, el partido pasa a FINALIZADO, ya no se podrá cambiar y se liquidan todas las apuestas asociadas.</p>
+
+  <form class="formulario tarjeta" th:action="@{/admin/resultados/{id}(id=${partidoEntidad.id})}" th:object="${resultado}" method="post" novalidate>
+    <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+
+    <h2>Marcador</h2>
+    <div class="grupo-marcador">
+      <div><label for="golesLocal">Goles <span th:text="${partidoEntidad.local.nombre}">Local</span></label>
+        <input id="golesLocal" type="number" min="0" th:field="*{golesLocal}">
+        <div class="error-campo" th:if="${#fields.hasErrors('golesLocal')}" th:errors="*{golesLocal}"></div></div>
+      <div><label for="golesVisitante">Goles <span th:text="${partidoEntidad.visitante.nombre}">Visitante</span></label>
+        <input id="golesVisitante" type="number" min="0" th:field="*{golesVisitante}">
+        <div class="error-campo" th:if="${#fields.hasErrors('golesVisitante')}" th:errors="*{golesVisitante}"></div></div>
+    </div>
+
+    <h2 style="margin-top:1rem">Estadísticas</h2>
+    <div class="grupo-marcador">
+      <div><label for="tirosLocal">Tiros local</label>
+        <input id="tirosLocal" type="number" min="0" th:field="*{tirosLocal}">
+        <div class="error-campo" th:if="${#fields.hasErrors('tirosLocal')}" th:errors="*{tirosLocal}"></div></div>
+      <div><label for="tirosVisitante">Tiros visitante</label>
+        <input id="tirosVisitante" type="number" min="0" th:field="*{tirosVisitante}">
+        <div class="error-campo" th:if="${#fields.hasErrors('tirosVisitante')}" th:errors="*{tirosVisitante}"></div></div>
+      <div><label for="cornersLocal">Tiros de esquina local</label>
+        <input id="cornersLocal" type="number" min="0" th:field="*{cornersLocal}">
+        <div class="error-campo" th:if="${#fields.hasErrors('cornersLocal')}" th:errors="*{cornersLocal}"></div></div>
+      <div><label for="cornersVisitante">Tiros de esquina visitante</label>
+        <input id="cornersVisitante" type="number" min="0" th:field="*{cornersVisitante}">
+        <div class="error-campo" th:if="${#fields.hasErrors('cornersVisitante')}" th:errors="*{cornersVisitante}"></div></div>
+    </div>
+
+    <h2 style="margin-top:1rem">Goleadores</h2>
+    <p class="suave">Agrega una fila por gol. Deben coincidir con el marcador. Sin goles, deja la lista vacía.</p>
+    <div id="filas-goles">
+      <div class="fila-gol" th:each="g, it : *{goles}">
+        <select th:field="*{goles[__${it.index}__].jugadorId}">
+          <option value="">Jugador...</option>
+          <option th:each="j : ${jugadores}" th:value="${j.id}" th:text="${j.equipo.nombre} + ' - #' + ${j.dorsal} + ' ' + ${j.nombre}">Jugador</option>
+        </select>
+        <input type="number" min="0" max="130" placeholder="Minuto" th:field="*{goles[__${it.index}__].minuto}">
+        <button type="button" class="btn btn-chico btn-peligro quitar-gol">Quitar</button>
+      </div>
+    </div>
+    <button type="button" id="agregar-gol" class="btn btn-borde btn-chico">+ Agregar gol</button>
+
+    <template id="plantilla-gol">
+      <div class="fila-gol">
+        <select name="goles[__INDEX__].jugadorId">
+          <option value="">Jugador...</option>
+          <option th:each="j : ${jugadores}" th:value="${j.id}" th:text="${j.equipo.nombre} + ' - #' + ${j.dorsal} + ' ' + ${j.nombre}">Jugador</option>
+        </select>
+        <input type="number" min="0" max="130" placeholder="Minuto" name="goles[__INDEX__].minuto">
+        <button type="button" class="btn btn-chico btn-peligro quitar-gol">Quitar</button>
+      </div>
+    </template>
+
+    <p style="margin-top:1rem">
+      <button class="btn" type="submit">Guardar resultado y liquidar apuestas</button>
+      <a class="btn btn-borde" th:href="@{/admin/resultados}">Cancelar</a>
+    </p>
+  </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

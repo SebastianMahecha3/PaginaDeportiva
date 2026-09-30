@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Equipos (admin)')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Equipos</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+
+  <section class="tarjeta">
+    <h2>Nuevo equipo</h2>
+    <form class="formulario" th:action="@{/admin/equipos/crear}" th:object="${equipo}" method="post" novalidate>
+      <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+      <div class="fila-form">
+        <div>
+          <label for="nombre">Nombre</label>
+          <input id="nombre" type="text" th:field="*{nombre}" maxlength="60">
+          <div class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+        </div>
+        <div>
+          <label for="valoracionInicial">Valoración inicial (1-10)</label>
+          <input id="valoracionInicial" type="number" min="1" max="10" th:field="*{valoracionInicial}">
+          <div class="error-campo" th:if="${#fields.hasErrors('valoracionInicial')}" th:errors="*{valoracionInicial}"></div>
+        </div>
+      </div>
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" rows="2" maxlength="500" th:field="*{descripcion}"></textarea>
+      <div class="error-campo" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}"></div>
+      <p><button class="btn" type="submit">Crear equipo</button></p>
+    </form>
+  </section>
+
+  <section class="tarjeta tabla-caja">
+    <table class="tabla">
+      <thead><tr><th>Nombre</th><th>Valoración</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <tr th:each="e : ${equipos}">
+          <td th:text="${e.nombre}">Equipo</td>
+          <td th:text="${e.valoracionInicial}">5</td>
+          <td><span class="estado" th:classappend="'estado-' + ${e.estado}" th:text="${e.estado}">ACTIVO</span></td>
+          <td class="acciones-tabla">
+            <a class="btn btn-chico btn-borde" th:href="@{/admin/equipos/{id}/editar(id=${e.id})}">Editar</a>
+            <form th:action="@{/admin/equipos/{id}/estado(id=${e.id})}" method="post">
+              <input type="hidden" name="estado" th:value="${e.estado.name() == 'ACTIVO'} ? 'INACTIVO' : 'ACTIVO'">
+              <button class="btn btn-chico" th:classappend="${e.estado.name() == 'ACTIVO'} ? 'btn-peligro'" type="submit"
+                      th:text="${e.estado.name() == 'ACTIVO'} ? 'Desactivar' : 'Activar'">Desactivar</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

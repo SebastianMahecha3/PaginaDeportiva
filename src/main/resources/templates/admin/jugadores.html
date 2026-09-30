@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Jugadores (admin)')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Jugadores</h1>
+  <div th:replace="~{fragments/layout :: mensajes}"></div>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+
+  <section class="tarjeta">
+    <h2>Nuevo jugador</h2>
+    <form class="formulario" th:action="@{/admin/jugadores/crear}" th:object="${jugador}" method="post" novalidate>
+      <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+      <div class="fila-form">
+        <div>
+          <label for="nombre">Nombre</label>
+          <input id="nombre" type="text" th:field="*{nombre}" maxlength="80">
+          <div class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+        </div>
+        <div>
+          <label for="dorsal">Dorsal (1-99)</label>
+          <input id="dorsal" type="number" min="1" max="99" th:field="*{dorsal}">
+          <div class="error-campo" th:if="${#fields.hasErrors('dorsal')}" th:errors="*{dorsal}"></div>
+        </div>
+        <div>
+          <label for="equipoId">Equipo</label>
+          <select id="equipoId" th:field="*{equipoId}">
+            <option value="">Selecciona...</option>
+            <option th:each="e : ${equipos}" th:value="${e.id}" th:text="${e.nombre}">Equipo</option>
+          </select>
+          <div class="error-campo" th:if="${#fields.hasErrors('equipoId')}" th:errors="*{equipoId}"></div>
+        </div>
+        <div>
+          <label for="posicion">Posición</label>
+          <select id="posicion" th:field="*{posicion}">
+            <option value="">Selecciona...</option>
+            <option th:each="pos : ${posiciones}" th:value="${pos}" th:text="${pos.etiqueta}">Delantero</option>
+          </select>
+          <div class="error-campo" th:if="${#fields.hasErrors('posicion')}" th:errors="*{posicion}"></div>
+        </div>
+        <div>
+          <label for="media">Media (1-99)</label>
+          <input id="media" type="number" min="1" max="99" th:field="*{media}">
+          <div class="error-campo" th:if="${#fields.hasErrors('media')}" th:errors="*{media}"></div>
+        </div>
+      </div>
+      <p><button class="btn" type="submit">Crear jugador</button></p>
+    </form>
+  </section>
+
+  <section class="tarjeta tabla-caja">
+    <table class="tabla">
+      <thead><tr><th>Dorsal</th><th>Nombre</th><th>Equipo</th><th>Posición</th><th>Media</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <tr th:each="j : ${jugadores}">
+          <td th:text="${j.dorsal}">10</td>
+          <td th:text="${j.nombre}">Jugador</td>
+          <td th:text="${j.equipo.nombre}">Equipo</td>
+          <td th:text="${j.posicionEfectiva().etiqueta}">Delantero</td>
+          <td th:text="${j.mediaEfectiva()}">75</td>
+          <td><span class="estado" th:classappend="'estado-' + ${j.estado}" th:text="${j.estado}">ACTIVO</span></td>
+          <td class="acciones-tabla">
+            <a class="btn btn-chico btn-borde" th:href="@{/admin/jugadores/{id}/editar(id=${j.id})}">Editar</a>
+            <form th:action="@{/admin/jugadores/{id}/estado(id=${j.id})}" method="post">
+              <input type="hidden" name="estado" th:value="${j.estado.name() == 'ACTIVO'} ? 'INACTIVO' : 'ACTIVO'">
+              <button class="btn btn-chico" th:classappend="${j.estado.name() == 'ACTIVO'} ? 'btn-peligro'" type="submit"
+                      th:text="${j.estado.name() == 'ACTIVO'} ? 'Desactivar' : 'Activar'">Desactivar</button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

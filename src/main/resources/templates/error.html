@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Error')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('')}"></header>
+<main class="contenedor centrado">
+  <div class="tarjeta form-caja">
+    <h1>Algo salió mal</h1>
+    <p th:text="${mensaje} ?: 'Ocurrió un error inesperado. Intenta de nuevo.'">Mensaje</p>
+    <p class="suave" th:if="${estado}" th:text="'Código: ' + ${estado}"></p>
+    <a class="btn" th:href="@{/}">Volver al inicio</a>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

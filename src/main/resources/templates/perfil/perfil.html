@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Perfil')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('perfil')}"></header>
+<main class="contenedor">
+  <h1>Mi perfil</h1>
+  <section class="tarjeta">
+    <p><strong>Usuario:</strong> <span th:text="${usuario.username}">usuario</span></p>
+    <p><strong>Miembro desde:</strong> <span th:text="${#temporals.format(usuario.fechaRegistro, 'dd/MM/yyyy')}">01/01/2026</span></p>
+  </section>
+  <section class="kpis">
+    <div class="kpi"><div class="num" th:text="${total}">0</div>Apuestas totales</div>
+    <div class="kpi"><div class="num" th:text="${pendientes}">0</div>Pendientes</div>
+    <div class="kpi"><div class="num" th:text="${ganadas}">0</div>Ganadas</div>
+    <div class="kpi"><div class="num" th:text="${perdidas}">0</div>Perdidas</div>
+  </section>
+  <a class="btn" th:href="@{/mis-apuestas}">Ver mis apuestas</a>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

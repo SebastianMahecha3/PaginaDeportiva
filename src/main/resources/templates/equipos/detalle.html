@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Equipo')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('equipos')}"></header>
+<main class="contenedor">
+  <section class="tarjeta">
+    <h1 th:text="${equipo.nombre}">Equipo</h1>
+    <p th:text="${equipo.descripcion}">Descripción</p>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Rendimiento</h2>
+    <p class="suave" th:if="${resumen.general.partidos == 0}">Este equipo todavía no tiene partidos finalizados.</p>
+    <div class="tabla-caja" th:unless="${resumen.general.partidos == 0}">
+      <table class="tabla">
+        <thead><tr><th></th><th>General</th><th>Local</th><th>Visitante</th></tr></thead>
+        <tbody>
+          <tr><td>Partidos</td><td th:text="${resumen.general.partidos}">0</td><td th:text="${resumen.comoLocal.partidos}">0</td><td th:text="${resumen.comoVisitante.partidos}">0</td></tr>
+          <tr><td>Ganados</td><td th:text="${resumen.general.ganados}">0</td><td th:text="${resumen.comoLocal.ganados}">0</td><td th:text="${resumen.comoVisitante.ganados}">0</td></tr>
+          <tr><td>Empatados</td><td th:text="${resumen.general.empatados}">0</td><td th:text="${resumen.comoLocal.empatados}">0</td><td th:text="${resumen.comoVisitante.empatados}">0</td></tr>
+          <tr><td>Perdidos</td><td th:text="${resumen.general.perdidos}">0</td><td th:text="${resumen.comoLocal.perdidos}">0</td><td th:text="${resumen.comoVisitante.perdidos}">0</td></tr>
+          <tr><td>Goles a favor (prom.)</td><td th:text="${resumen.general.promGolesFavor}">0</td><td th:text="${resumen.comoLocal.promGolesFavor}">0</td><td th:text="${resumen.comoVisitante.promGolesFavor}">0</td></tr>
+          <tr><td>Goles en contra (prom.)</td><td th:text="${resumen.general.promGolesContra}">0</td><td th:text="${resumen.comoLocal.promGolesContra}">0</td><td th:text="${resumen.comoVisitante.promGolesContra}">0</td></tr>
+          <tr><td>Tiros (prom.)</td><td th:text="${resumen.general.promTiros}">0</td><td th:text="${resumen.comoLocal.promTiros}">0</td><td th:text="${resumen.comoVisitante.promTiros}">0</td></tr>
+          <tr><td>Tiros de esquina (prom.)</td><td th:text="${resumen.general.promCorners}">0</td><td th:text="${resumen.comoLocal.promCorners}">0</td><td th:text="${resumen.comoVisitante.promCorners}">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="rejilla-2">
+    <section class="tarjeta">
+      <h2>Jugadores</h2>
+      <p class="suave" th:if="${#lists.isEmpty(jugadores)}">Sin jugadores activos.</p>
+      <ul>
+        <li th:each="j : ${jugadores}"><strong th:text="'#' + ${j.dorsal}">#10</strong> <span th:text="${j.nombre}">Jugador</span>
+          <span class="suave" th:text="'- ' + ${j.posicionEfectiva().etiqueta} + ' · media ' + ${j.mediaEfectiva()}">- Delantero · media 75</span></li>
+      </ul>
+    </section>
+    <section class="tarjeta">
+      <h2>Últimos partidos</h2>
+      <p class="suave" th:if="${#lists.isEmpty(ultimos)}">Sin partidos finalizados.</p>
+      <div th:each="p : ${ultimos}" style="padding:.3rem 0">
+        <a th:href="@{/partidos/{id}(id=${p.id})}">
+          <span th:text="${p.local.nombre}">L</span>
+          <strong th:text="${p.golesLocal} + ' - ' + ${p.golesVisitante}">0 - 0</strong>
+          <span th:text="${p.visitante.nombre}">V</span>
+        </a>
+      </div>
+    </section>
+  </div>
+  <a class="btn btn-borde" th:href="@{/equipos}">← Volver a equipos</a>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

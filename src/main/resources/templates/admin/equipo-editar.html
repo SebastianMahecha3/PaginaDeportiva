@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: cabecera('Editar equipo')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar('admin')}"></header>
+<main class="contenedor">
+  <h1 class="admin-titulo">Editar equipo</h1>
+  <div th:replace="~{fragments/layout :: adminMenu}"></div>
+  <section class="tarjeta form-caja" style="max-width:560px">
+    <form class="formulario" th:action="@{/admin/equipos/{id}/editar(id=${equipoEntidad.id})}" th:object="${equipo}" method="post" novalidate>
+      <div th:replace="~{fragments/layout :: erroresGlobales}"></div>
+      <input type="hidden" th:field="*{id}">
+      <label for="nombre">Nombre</label>
+      <input id="nombre" type="text" th:field="*{nombre}" maxlength="60">
+      <div class="error-campo" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+      <label for="valoracionInicial">Valoración inicial (1-10)</label>
+      <input id="valoracionInicial" type="number" min="1" max="10" th:field="*{valoracionInicial}">
+      <div class="error-campo" th:if="${#fields.hasErrors('valoracionInicial')}" th:errors="*{valoracionInicial}"></div>
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" rows="3" maxlength="500" th:field="*{descripcion}"></textarea>
+      <div class="error-campo" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}"></div>
+      <p><button class="btn" type="submit">Guardar</button> <a class="btn btn-borde" th:href="@{/admin/equipos}">Cancelar</a></p>
+    </form>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
