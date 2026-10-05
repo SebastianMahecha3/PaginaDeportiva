@@ -31,10 +31,24 @@ class CalculadoraApuestaTest {
     }
 
     @Test
-    void parley_multiplicaLasCuotas() {
+    void parley_sumaLasCuotas() {
         BigDecimal cuota = calculadora.cuotaCombinada(
                 List.of(new BigDecimal("1.50"), new BigDecimal("1.80"), new BigDecimal("2.00")));
-        assertNumero("5.40", cuota);
+        assertNumero("5.30", cuota);
+    }
+
+    @Test
+    void apuestaSimple_cuotaCombinadaEsSuPropiaCuota() {
+        assertNumero("2.35", calculadora.cuotaCombinada(List.of(new BigDecimal("2.35"))));
+    }
+
+    @Test
+    void parley_sumaYLuegoAplicaElBonus() {
+        config.setParleyBonusPorSeleccion(new BigDecimal("0.10"));
+        BigDecimal base = calculadora.cuotaCombinada(List.of(new BigDecimal("1.50"), new BigDecimal("1.80")));
+        BigDecimal bonus = calculadora.bonusParley(2);
+        assertNumero("3.30", base);
+        assertNumero("3.63", calculadora.aplicarBonus(base, bonus)); // (1.50 + 1.80) × 1.10
     }
 
     @Test

@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
  * Matemática de dinero de las apuestas (todo en BigDecimal):
  *   montoNeto = apostado - apostado * comisión
  *   gananciaPotencial = montoNeto * cuotaTotal
- *   cuotaCombinada = producto de cuotas individuales (+ bonus opcional de parley)
+ *   cuotaCombinada = SUMA de las cuotas individuales (una apuesta simple es su propia cuota)
+ *   cuotaTotal = cuotaCombinada × (1 + bonus de parley)
  * No accede a la base de datos: la usa ApuestaServicio y se prueba de forma aislada.
  */
 @Component
@@ -32,12 +33,13 @@ public class CalculadoraApuesta {
         return montoNeto(monto).multiply(cuotaTotal).setScale(2, RoundingMode.HALF_UP);
     }
 
+    /** Parley: cuota 1 + cuota 2 + cuota 3 + ... (ya no se multiplican). El bonus se aplica después con aplicarBonus. */
     public BigDecimal cuotaCombinada(List<BigDecimal> cuotas) {
-        BigDecimal producto = BigDecimal.ONE;
+        BigDecimal suma = BigDecimal.ZERO;
         for (BigDecimal c : cuotas) {
-            producto = producto.multiply(c);
+            suma = suma.add(c);
         }
-        return producto.setScale(2, RoundingMode.HALF_UP);
+        return suma.setScale(2, RoundingMode.HALF_UP);
     }
 
     /** Bonus como fracción: (selecciones - 1) * bonusPorSeleccion. Una apuesta simple nunca tiene bonus. */

@@ -12,14 +12,18 @@ import org.springframework.stereotype.Component;
 @Getter @Setter
 public class ConfiguracionCuotas {
 
-    /** Margen de la casa: cuota = 1 / (probabilidad * (1 + margen)). 0.08 = 8%. */
-    private BigDecimal margen = new BigDecimal("0.08");
+    /**
+     * Margen de la casa: cuota = 1 / (probabilidad * (1 + margen)). 0.05 = 5%.
+     * Se aplica UNA sola vez. La comisión de la apuesta (apuestas.comision) es aparte y no entra en la cuota.
+     */
+    private BigDecimal margen = new BigDecimal("0.05");
 
     /** k del suavizado: peso del historial = n / (n + k), donde n = partidos jugados. */
-    private int suavizadoK = 3;
+    private int suavizadoK = 5;
 
-    private BigDecimal cuotaMinima = new BigDecimal("1.05");
-    private BigDecimal cuotaMaxima = new BigDecimal("50.00");
+    /** Límites de cuota para TODOS los mercados. */
+    private BigDecimal cuotaMinima = new BigDecimal("1.10");
+    private BigDecimal cuotaMaxima = new BigDecimal("10.00");
 
     /** Promedios de la liga cuando todavía no hay partidos (por equipo y por partido). */
     private BigDecimal golesLocalLiga = new BigDecimal("1.5");

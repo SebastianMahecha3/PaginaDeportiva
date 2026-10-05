@@ -93,14 +93,14 @@ class ServicioCuotasPoissonTest {
         double suma = implicita(cuota(resultado(OpcionSeleccion.LOCAL)))
                 + implicita(cuota(resultado(OpcionSeleccion.EMPATE)))
                 + implicita(cuota(resultado(OpcionSeleccion.VISITANTE)));
-        assertEquals(1.08, suma, 0.05); // margen 8% (más el redondeo a 2 decimales)
+        assertEquals(1.05, suma, 0.05); // margen 5% (más el redondeo a 2 decimales)
     }
 
     @Test
     void masYMenosGoles_tambienIncluyenElMargen() {
         double suma = implicita(cuota(masMenos(TipoMercado.GOLES, OpcionSeleccion.MAS, "2.5", null)))
                 + implicita(cuota(masMenos(TipoMercado.GOLES, OpcionSeleccion.MENOS, "2.5", null)));
-        assertEquals(1.08, suma, 0.05);
+        assertEquals(1.05, suma, 0.05);
     }
 
     @Test
@@ -176,8 +176,43 @@ class ServicioCuotasPoissonTest {
         visitante.setValoracionInicial(1);
         for (OpcionSeleccion o : List.of(OpcionSeleccion.LOCAL, OpcionSeleccion.EMPATE, OpcionSeleccion.VISITANTE)) {
             BigDecimal c = cuota(resultado(o));
-            assertTrue(c.compareTo(new BigDecimal("1.05")) >= 0 && c.compareTo(new BigDecimal("50.00")) <= 0, "fuera de límites: " + c);
+            assertTrue(c.compareTo(new BigDecimal("1.10")) >= 0 && c.compareTo(new BigDecimal("10.00")) <= 0, "fuera de límites: " + c);
             assertEquals(2, c.scale());
+        }
+    }
+
+    @Test
+    void aCuota_aplicaElMargenDel5UnaSolaVez() {
+        // 1 / (0.50 × 1.05) = 1.9047... -> 1.90 (sin comisión dentro de la cuota)
+        assertEquals(0, new BigDecimal("1.90").compareTo(servicio.aCuota(new BigDecimal("0.50"))));
+    }
+
+    @Test
+    void aCuota_probabilidadesDiminutasNuncaSuperan10() {
+        for (String p : List.of("0", "0.0001", "0.01", "0.05", "0.0952")) {
+            assertEquals(0, new BigDecimal("10.00").compareTo(servicio.aCuota(new BigDecimal(p))), "p = " + p);
+        }
+    }
+
+    @Test
+    void aCuota_probabilidadesAltasNuncaBajanDe110() {
+        assertEquals(0, new BigDecimal("1.10").compareTo(servicio.aCuota(BigDecimal.ONE)));
+        assertEquals(0, new BigDecimal("1.10").compareTo(servicio.aCuota(new BigDecimal("0.95"))));
+    }
+
+    @Test
+    void goleadoresYMercadosExtremos_respetanLosLimites() {
+        Jugador portero = TestDatos.jugador(13, "Portero", local, PosicionJugador.PORTERO, 60);
+        Jugador delantero = TestDatos.jugador(10, "Delantero", local, PosicionJugador.DELANTERO, 90);
+        when(jugadorRepo.findByEquipoIdAndEstadoOrderByDorsalAsc(1L, EstadoJugador.ACTIVO))
+                .thenReturn(List.of(portero, delantero));
+        List<BigDecimal> cuotas = List.of(
+                cuota(goleador(portero)), cuota(goleador(delantero)),
+                cuota(masMenos(TipoMercado.GOLES, OpcionSeleccion.MAS, "3.5", null)),
+                cuota(masMenos(TipoMercado.TIROS, OpcionSeleccion.MAS, "10.5", LadoEquipo.VISITANTE)),
+                cuota(masMenos(TipoMercado.CORNERS, OpcionSeleccion.MAS, "4.5", LadoEquipo.LOCAL)));
+        for (BigDecimal c : cuotas) {
+            assertTrue(c.compareTo(new BigDecimal("1.10")) >= 0 && c.compareTo(new BigDecimal("10.00")) <= 0, "fuera de límites: " + c);
         }
     }
 

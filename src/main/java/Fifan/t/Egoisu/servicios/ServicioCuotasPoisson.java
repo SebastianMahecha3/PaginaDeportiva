@@ -42,7 +42,9 @@ import org.springframework.transaction.annotation.Transactional;
  * 3) Mercados: 1X2 (matriz de Poisson), más/menos goles (Poisson de λL+λV), tiros y corners (Poisson por equipo) y
  *    goleador: P = 1 - exp(-λ_equipo × parte_del_jugador), donde la parte depende de su POSICIÓN, su MEDIA (1-99)
  *    y sus goles anteriores.
- * 4) Cuota final = 1 / (p × (1 + margen)), acotada entre cuotaMinima y cuotaMaxima, con 2 decimales (HALF_UP).
+ * 4) Cuota final = 1 / (p × (1 + margen)) con margen 5% aplicado una sola vez (la comisión de la apuesta NO entra aquí).
+ *    Antes de convertir, p se acota por abajo a 1 / (cuotaMaxima × (1 + margen)) para que una probabilidad diminuta
+ *    no dispare la cuota. Después se acota entre cuotaMinima (1.10) y cuotaMaxima (10.00), con 2 decimales (HALF_UP).
  */
 @Service
 @RequiredArgsConstructor
@@ -125,15 +127,17 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
         return null;
     }
 
-    /** cuota = 1 / (p × (1 + margen)), acotada y redondeada a 2 decimales. */
+    /**
+     * ÚNICO punto donde una probabilidad se convierte en cuota (lo usan todos los mercados):
+     *   1) p se acota a [pMin, 1], con pMin = 1 / (cuotaMaxima × (1 + margen)) (≈ 9.52% con margen 5% y tope 10.00).
+     *   2) cuota = 1 / (p × (1 + margen))      (margen aplicado una sola vez; sin comisión)
+     *   3) cuota = max(cuotaMinima, min(cuota, cuotaMaxima)), redondeada a 2 decimales.
+     */
     BigDecimal aCuota(BigDecimal p) {
-        BigDecimal cuota;
-        if (p.signum() <= 0) {
-            cuota = config.getCuotaMaxima();
-        } else {
-            BigDecimal conMargen = p.multiply(BigDecimal.ONE.add(config.getMargen()), MC);
-            cuota = BigDecimal.ONE.divide(conMargen, MC);
-        }
+        BigDecimal factorMargen = BigDecimal.ONE.add(config.getMargen());
+        BigDecimal probabilidadMinima = BigDecimal.ONE.divide(config.getCuotaMaxima().multiply(factorMargen, MC), MC);
+        BigDecimal probabilidad = p.max(probabilidadMinima).min(BigDecimal.ONE);
+        BigDecimal cuota = BigDecimal.ONE.divide(probabilidad.multiply(factorMargen, MC), MC);
         cuota = cuota.max(config.getCuotaMinima()).min(config.getCuotaMaxima());
         return cuota.setScale(2, RoundingMode.HALF_UP);
     }

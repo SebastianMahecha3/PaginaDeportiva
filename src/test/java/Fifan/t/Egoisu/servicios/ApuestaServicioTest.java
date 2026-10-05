@@ -103,15 +103,15 @@ class ApuestaServicioTest {
     }
 
     @Test
-    void confirmarParley_multiplicaLasCuotas() {
+    void confirmarParley_sumaLasCuotas() {
         cuota(partido1, "1.50");
         cuota(partido2, "1.80");
 
         Apuesta apuesta = servicio.confirmar("ana", List.of(resultadoLocal(1), resultadoLocal(2)), new BigDecimal("100"), null);
 
         assertEquals(TipoApuesta.PARLEY, apuesta.getTipo());
-        assertEquals(0, new BigDecimal("2.70").compareTo(apuesta.getCuotaTotal()));
-        assertEquals(0, new BigDecimal("256.50").compareTo(apuesta.getGananciaPotencial()));
+        assertEquals(0, new BigDecimal("3.30").compareTo(apuesta.getCuotaTotal())); // 1.50 + 1.80
+        assertEquals(0, new BigDecimal("313.50").compareTo(apuesta.getGananciaPotencial())); // 95 neto × 3.30
     }
 
     @Test
