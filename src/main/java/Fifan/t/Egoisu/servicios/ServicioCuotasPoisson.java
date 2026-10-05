@@ -14,6 +14,7 @@ import Fifan.t.Egoisu.entidades.enums.EstadoJugador;
 import Fifan.t.Egoisu.entidades.enums.EstadoPartido;
 import Fifan.t.Egoisu.entidades.enums.LadoEquipo;
 import Fifan.t.Egoisu.entidades.enums.OpcionSeleccion;
+import Fifan.t.Egoisu.entidades.enums.PosicionJugador;
 import Fifan.t.Egoisu.repositorios.JugadorRepositorio;
 import Fifan.t.Egoisu.repositorios.PartidoRepositorio;
 import java.math.BigDecimal;
@@ -41,10 +42,21 @@ import org.springframework.transaction.annotation.Transactional;
  *        ataque = 0.5 + valoración/10      debilidad = 1.5 - valoración/10
  * 3) Mercados: 1X2 (matriz de Poisson), más/menos goles (Poisson de λL+λV), tiros y corners (Poisson por equipo) y
  *    goleador: P = 1 - exp(-λ_equipo × parte_del_jugador), donde la parte depende de su POSICIÓN, su MEDIA (1-99)
- *    y sus goles anteriores.
- * 4) Cuota final = 1 / (p × (1 + margen)) con margen 5% aplicado una sola vez (la comisión de la apuesta NO entra aquí).
- *    Antes de convertir, p se acota por abajo a 1 / (cuotaMaxima × (1 + margen)) para que una probabilidad diminuta
- *    no dispare la cuota. Después se acota entre cuotaMinima (1.10) y cuotaMaxima (10.00), con 2 decimales (HALF_UP).
+ *    y sus goles anteriores. Sobre esa P se aplica al final un factor de posición (ver ajustarPorPosicion).
+ * 4) Cuota final = 1 / (p × (1 + margen)) con margen 5% aplicado una sola vez (la comisión de la apuesta NO entra aquí;
+ *    vive solo en CalculadoraApuesta y afecta únicamente al pago). Antes de convertir, p se acota por abajo a
+ *    1 / (cuotaMaxima × (1 + margen)) para que una probabilidad diminuta no dispare la cuota. Después se acota entre
+ *    cuotaMinima (1.10) y cuotaMaxima (5.00), con 2 decimales (HALF_UP).
+ *
+ * Qué NO cambió en esta versión: λ_local y λ_visitante (promedios de liga, ataque, defensa, local/visitante), el modelo
+ * de Poisson (1X2, goles, tiros, corners, goleador), el historial (general + como local/visitante, goles a favor/en
+ * contra, partidos jugados) y el suavizado k = 5. Solo cambió la capa probabilidad -> cuota:
+ *  - Tope 5.00 en todos los mercados: con cuotas más bajas la casa paga menos por eventos improbables y se evitan
+ *    cuotas "enormes" (con margen 5%, toda p < 19.05% queda en 5.00).
+ *  - Primer partido (n = 0): la valoración inicial sigue siendo el punto de partida del ataque/defensa (λ intacto), pero
+ *    la cuota pasa por el MISMO aCuota (margen, piso de p, 1.10 / 5.00, 2 decimales); no hay sistema aparte. El
+ *    suavizado k ya actúa en los promedios de la liga que usa ese primer partido.
+ *  - Goleadores: factor de posición sobre la probabilidad final (único ajuste específico de un mercado).
  */
 @Service
 @RequiredArgsConstructor
@@ -129,9 +141,11 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
 
     /**
      * ÚNICO punto donde una probabilidad se convierte en cuota (lo usan todos los mercados):
-     *   1) p se acota a [pMin, 1], con pMin = 1 / (cuotaMaxima × (1 + margen)) (≈ 9.52% con margen 5% y tope 10.00).
+     *   1) p se acota a [pMin, 1], con pMin = 1 / (cuotaMaxima × (1 + margen)) (≈ 19.05% con margen 5% y tope 5.00).
      *   2) cuota = 1 / (p × (1 + margen))      (margen aplicado una sola vez; sin comisión)
      *   3) cuota = max(cuotaMinima, min(cuota, cuotaMaxima)), redondeada a 2 decimales.
+     * Límites aplicados DESPUÉS de calcular la cuota: ningún mercado (1X2, goles, goleador, tiros, corners)
+     * puede salir por encima de 5.00 ni por debajo de 1.10. La comisión no interviene en ningún paso.
      */
     BigDecimal aCuota(BigDecimal p) {
         BigDecimal factorMargen = BigDecimal.ONE.add(config.getMargen());
@@ -140,6 +154,29 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
         BigDecimal cuota = BigDecimal.ONE.divide(probabilidad.multiply(factorMargen, MC), MC);
         cuota = cuota.max(config.getCuotaMinima()).min(config.getCuotaMaxima());
         return cuota.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    // ------------------------------------------------------------------ ajuste por posición (goleadores)
+
+    /**
+     * p_final = p_poisson × factor(posición). La posición solo ajusta la probabilidad ya calculada con Poisson; no
+     * reemplaza el modelo. Como la cuota es 1 / (p × (1 + margen)), a mayor factor menor cuota, por eso:
+     *   delantero (factor mayor) < mediocampista < defensa < portero (factor menor)   en cuota,
+     * porque marcar es más probable cuanto más ofensiva es la posición. Los factores son moderados (ver
+     * ConfiguracionCuotas) para no volver a inflar cuotas; el tope 5.00 y el piso 1.10 se aplican después en aCuota.
+     */
+    BigDecimal ajustarPorPosicion(BigDecimal p, PosicionJugador posicion) {
+        return p.multiply(factorPosicion(posicion), MC);
+    }
+
+    private BigDecimal factorPosicion(PosicionJugador posicion) {
+        return switch (posicion) {
+            case DELANTERO -> config.getFactorPosicionDelantero();
+            case MEDIOCAMPISTA -> config.getFactorPosicionMediocampista();
+            case DEFENSA -> config.getFactorPosicionDefensa();
+            case PORTERO -> config.getFactorPosicionPortero();
+            default -> BigDecimal.ONE;
+        };
     }
 
     // ------------------------------------------------------------------ modelo del partido
@@ -170,6 +207,7 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
         Perfil visitante = new Perfil(eVisitante, false, historialVisitante, liga);
 
         Modelo m = new Modelo();
+        // λ_local y λ_visitante: lógica ORIGINAL sin tocar (Poisson + historial + local/visitante). Esta versión solo cambia probabilidad -> cuota.
         // Goles: el ataque mezcla goles y tiros; la debilidad del rival mezcla goles y tiros recibidos.
         BigDecimal ataqueLocal = mitad(local.favor(Metrica.GOLES), local.favor(Metrica.TIROS));
         BigDecimal ataqueVisitante = mitad(visitante.favor(Metrica.GOLES), visitante.favor(Metrica.TIROS));
@@ -203,6 +241,8 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
      * peso(jugador) = pesoPosición × (media/70)^3 × (1 + goles_del_jugador / partidos_del_equipo)
      * λ_jugador = λ_equipo × peso / suma_de_pesos_del_equipo      P(marca) = 1 - exp(-λ_jugador)
      * Un delantero de media alta obtiene una probabilidad mayor; un portero, casi nula.
+     * Después, P se multiplica por el factor de posición (ajustarPorPosicion). Se mantienen la base de Poisson, los goles
+     * del jugador, los goles del equipo (λ_equipo) y la participación (peso / suma de pesos).
      */
     private void repartirGoles(Equipo equipo, BigDecimal lambdaEquipo, List<Partido> partidosEquipo, Map<Long, BigDecimal> destino) {
         List<Jugador> jugadores = jugadorRepositorio.findByEquipoIdAndEstadoOrderByDorsalAsc(equipo.getId(), EstadoJugador.ACTIVO);
@@ -229,7 +269,7 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
         for (Jugador j : jugadores) {
             BigDecimal lambdaJugador = lambdaEquipo.multiply(pesos.get(j.getId()), MC).divide(total, MC);
             BigDecimal p = BigDecimal.ONE.subtract(MatematicaProbabilidad.exp(lambdaJugador.negate()), MC);
-            destino.put(j.getId(), MatematicaProbabilidad.limitar(p));
+            destino.put(j.getId(), MatematicaProbabilidad.limitar(ajustarPorPosicion(p, j.posicionEfectiva())));
         }
     }
 
