@@ -22,6 +22,12 @@ public class ConfiguracionCuotas {
     private int suavizadoK = 5;
 
     /**
+     * Primer partido (sin historial): cuántos partidos "equivale" la valoración inicial al suavizar con k.
+     * Peso de la valoración = m / (m + k) = 5/10 = 50% con los valores por defecto; el resto se acerca al promedio de la liga.
+     */
+    private int valoracionPartidosEquivalentes = 5;
+
+    /**
      * Límites de cuota para TODOS los mercados (se aplican después de calcular la cuota).
      * El máximo baja de 10.00 a 5.00 para que las probabilidades pequeñas no generen cuotas enormes.
      */

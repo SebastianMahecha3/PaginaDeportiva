@@ -38,8 +38,9 @@ import org.springframework.transaction.annotation.Transactional;
  *        λ_local     = media_goles_de_local     × ataque_local     × debilidad_visitante
  *        λ_visitante = media_goles_de_visitante × ataque_visitante × debilidad_local
  * 2) Con historial: 50% rendimiento general + 50% como local/visitante, suavizado hacia el promedio de la liga con
- *    peso n/(n+k). Sin partidos (n = 0): solo el NIVEL (valoración 1-10) del equipo:
- *        ataque = 0.5 + valoración/10      debilidad = 1.5 - valoración/10
+ *    peso n/(n+k). Sin partidos (n = 0): solo el NIVEL (valoración 1-10) del equipo, también suavizado hacia 1.00:
+ *        ataque = 1 + w × (0.5 + valoración/10 - 1)      debilidad = 1 + w × (1.5 - valoración/10 - 1)
+ *    con w = m/(m+k), donde m = valoracionPartidosEquivalentes (ver suavizarNivel).
  * 3) Mercados: 1X2 (matriz de Poisson), más/menos goles (Poisson de λL+λV), tiros y corners (Poisson por equipo) y
  *    goleador: P = 1 - exp(-λ_equipo × parte_del_jugador), donde la parte depende de su POSICIÓN, su MEDIA (1-99)
  *    y sus goles anteriores. Sobre esa P se aplica al final un factor de posición (ver ajustarPorPosicion).
@@ -48,14 +49,16 @@ import org.springframework.transaction.annotation.Transactional;
  *    1 / (cuotaMaxima × (1 + margen)) para que una probabilidad diminuta no dispare la cuota. Después se acota entre
  *    cuotaMinima (1.10) y cuotaMaxima (5.00), con 2 decimales (HALF_UP).
  *
- * Qué NO cambió en esta versión: λ_local y λ_visitante (promedios de liga, ataque, defensa, local/visitante), el modelo
- * de Poisson (1X2, goles, tiros, corners, goleador), el historial (general + como local/visitante, goles a favor/en
- * contra, partidos jugados) y el suavizado k = 5. Solo cambió la capa probabilidad -> cuota:
+ * Qué NO cambió en esta versión: la fórmula de λ (promedio de liga × ataque × debilidad del rival, con historial y
+ * local/visitante), el modelo de Poisson (1X2, goles, tiros, corners, goleador), el historial (general + como
+ * local/visitante, goles a favor/en contra, partidos jugados) y k = 5. Lo ÚNICO que cambia en λ: cuando n = 0, el
+ * ataque/debilidad por valoración ahora se suaviza con k (antes entraba sin suavizar). Con historial, λ es idéntico.
+ * El resto del cambio está en la capa probabilidad -> cuota:
  *  - Tope 5.00 en todos los mercados: con cuotas más bajas la casa paga menos por eventos improbables y se evitan
  *    cuotas "enormes" (con margen 5%, toda p < 19.05% queda en 5.00).
  *  - Primer partido (n = 0): la valoración inicial sigue siendo el punto de partida del ataque/defensa (λ intacto), pero
  *    la cuota pasa por el MISMO aCuota (margen, piso de p, 1.10 / 5.00, 2 decimales); no hay sistema aparte. El
- *    suavizado k ya actúa en los promedios de la liga que usa ese primer partido.
+ *    suavizado k también se aplica a la valoración (suavizarNivel), así el primer partido no produce λ extremos.
  *  - Goleadores: factor de posición sobre la probabilidad final (único ajuste específico de un mercado).
  */
 @Service
@@ -207,7 +210,7 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
         Perfil visitante = new Perfil(eVisitante, false, historialVisitante, liga);
 
         Modelo m = new Modelo();
-        // λ_local y λ_visitante: lógica ORIGINAL sin tocar (Poisson + historial + local/visitante). Esta versión solo cambia probabilidad -> cuota.
+        // λ: misma fórmula, historial y local/visitante de siempre. Único cambio: con n = 0 la valoración se suaviza (suavizarNivel).
         // Goles: el ataque mezcla goles y tiros; la debilidad del rival mezcla goles y tiros recibidos.
         BigDecimal ataqueLocal = mitad(local.favor(Metrica.GOLES), local.favor(Metrica.TIROS));
         BigDecimal ataqueVisitante = mitad(visitante.favor(Metrica.GOLES), visitante.favor(Metrica.TIROS));
@@ -372,14 +375,30 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
             return mezcla.max(FACTOR_MIN).min(FACTOR_MAX);
         }
 
-        /** Ataque por nivel: 0.5 + valoración/10 (valoración 1-10). */
+        /** Ataque por nivel: 0.5 + valoración/10 (valoración 1-10), suavizado hacia 1.00 con k. */
         private BigDecimal ataquePorNivel() {
-            return MITAD.add(BigDecimal.valueOf(equipo.getValoracionInicial()).divide(BigDecimal.TEN, MC), MC);
+            return suavizarNivel(MITAD.add(BigDecimal.valueOf(equipo.getValoracionInicial()).divide(BigDecimal.TEN, MC), MC));
         }
 
-        /** Debilidad defensiva por nivel: 1.5 - valoración/10. */
+        /** Debilidad defensiva por nivel: 1.5 - valoración/10, suavizada hacia 1.00 con k. */
         private BigDecimal debilidadPorNivel() {
-            return new BigDecimal("1.5").subtract(BigDecimal.valueOf(equipo.getValoracionInicial()).divide(BigDecimal.TEN, MC), MC);
+            return suavizarNivel(new BigDecimal("1.5").subtract(BigDecimal.valueOf(equipo.getValoracionInicial()).divide(BigDecimal.TEN, MC), MC));
+        }
+
+        /**
+         * Primer partido: mismo suavizado que el historial, pero la valoración cuenta como m partidos equivalentes
+         * (con n = 0 el peso n/(n+k) sería 0 y la valoración se ignoraría). peso = m/(m+k); mezcla con 1.00 (liga).
+         * Así un 10 contra un 1 ya no genera λ extremos, y la cuota no se dispara solo por no tener historial.
+         */
+        private BigDecimal suavizarNivel(BigDecimal factorNivel) {
+            BigDecimal m = BigDecimal.valueOf(config.getValoracionPartidosEquivalentes());
+            BigDecimal divisor = m.add(BigDecimal.valueOf(config.getSuavizadoK()));
+            if (divisor.signum() == 0) {
+                return factorNivel;
+            }
+            BigDecimal peso = m.divide(divisor, MC);
+            BigDecimal mezcla = peso.multiply(factorNivel, MC).add(BigDecimal.ONE.subtract(peso, MC), MC);
+            return mezcla.max(FACTOR_MIN).min(FACTOR_MAX);
         }
     }
 
