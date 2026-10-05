@@ -35,6 +35,15 @@ public class ConfiguracionCuotas {
     private BigDecimal cuotaMaxima = new BigDecimal("5.00");
 
     /**
+     * Compresión suave hacia el tope (para que probabilidades distintas NO terminen todas en 5.00).
+     * Hasta compresionInicio la cuota no se toca; por encima, la parte sobrante se curva asintóticamente hacia cuotaMaxima:
+     *   cuota = inicio + (maxima - inicio) × exceso / (exceso + escala),  exceso = cuotaBruta - inicio.
+     * Una escala mayor curva más despacio (más diferencia entre jugadores improbables).
+     */
+    private BigDecimal compresionInicio = new BigDecimal("4.00");
+    private BigDecimal compresionEscala = new BigDecimal("15");
+
+    /**
      * Factor de posición del mercado GOLEADOR: multiplica la probabilidad de gol del jugador (Poisson).
      * Más probabilidad = menos cuota, así que delantero < mediocampista < defensa < portero en cuota.
      * Moderados a propósito: el reparto por peso ya diferencia posiciones, y así el ajuste no dispara cuotas.

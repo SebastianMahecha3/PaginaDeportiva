@@ -130,11 +130,9 @@ class ServicioCuotasPoissonTest {
         BigDecimal cDef = cuota(goleador(defensa));
         BigDecimal cPor = cuota(goleador(portero));
 
-        // Con el tope de 5.00 las posiciones menos ofensivas pueden empatar en 5.00; nunca se invierte el orden.
-        assertTrue(cDel.compareTo(cMed) <= 0, "delantero <= mediocampista");
-        assertTrue(cMed.compareTo(cDef) <= 0, "mediocampista <= defensa");
-        assertTrue(cDef.compareTo(cPor) <= 0, "defensa <= portero");
-        assertTrue(cDel.compareTo(cPor) < 0, "delantero < portero");
+        assertTrue(cDel.compareTo(cMed) < 0, "delantero < mediocampista");
+        assertTrue(cMed.compareTo(cDef) < 0, "mediocampista < defensa");
+        assertTrue(cDef.compareTo(cPor) < 0, "defensa < portero");
     }
 
     @Test
@@ -149,6 +147,19 @@ class ServicioCuotasPoissonTest {
         assertTrue(cMed.compareTo(cDef) < 0, "mediocampista < defensa");
         assertTrue(cDef.compareTo(cPor) < 0, "defensa < portero");
         assertTrue(cPor.compareTo(new BigDecimal("5.00")) <= 0 && cDel.compareTo(new BigDecimal("1.10")) >= 0);
+    }
+
+    @Test
+    void goleador_conProbabilidadBaseBaja_lasPosicionesSiguenDiferenciandose() {
+        BigDecimal base = new BigDecimal("0.05"); // zona donde antes todo quedaba en 5.00
+        BigDecimal cDel = servicio.aCuota(servicio.ajustarPorPosicion(base, PosicionJugador.DELANTERO));
+        BigDecimal cMed = servicio.aCuota(servicio.ajustarPorPosicion(base, PosicionJugador.MEDIOCAMPISTA));
+        BigDecimal cDef = servicio.aCuota(servicio.ajustarPorPosicion(base, PosicionJugador.DEFENSA));
+        BigDecimal cPor = servicio.aCuota(servicio.ajustarPorPosicion(base, PosicionJugador.PORTERO));
+
+        assertTrue(cDel.compareTo(cMed) < 0 && cMed.compareTo(cDef) < 0 && cDef.compareTo(cPor) < 0,
+                cDel + " < " + cMed + " < " + cDef + " < " + cPor);
+        assertTrue(cPor.compareTo(new BigDecimal("5.00")) <= 0);
     }
 
     @Test
@@ -228,9 +239,21 @@ class ServicioCuotasPoissonTest {
 
     @Test
     void aCuota_probabilidadesDiminutasNuncaSuperan5() {
-        // Con margen 5% y tope 5.00, toda p < 19.05% queda exactamente en 5.00.
         for (String p : List.of("0", "0.0001", "0.01", "0.05", "0.0952", "0.19")) {
-            assertEquals(0, new BigDecimal("5.00").compareTo(servicio.aCuota(new BigDecimal(p))), "p = " + p);
+            assertTrue(servicio.aCuota(new BigDecimal(p)).compareTo(new BigDecimal("5.00")) <= 0, "p = " + p);
+        }
+        assertEquals(0, new BigDecimal("5.00").compareTo(servicio.aCuota(BigDecimal.ZERO)));
+    }
+
+    @Test
+    void aCuota_probabilidadesBajasSiguenDiferenciandose() {
+        // Menos probabilidad => cuota mayor, incluso cerca del tope (antes todas quedaban en 5.00).
+        BigDecimal anterior = servicio.aCuota(new BigDecimal("0.30"));
+        for (String p : List.of("0.15", "0.10", "0.05", "0.02", "0.005")) {
+            BigDecimal actual = servicio.aCuota(new BigDecimal(p));
+            assertTrue(actual.compareTo(anterior) > 0, "p = " + p + " -> " + actual + " debería superar " + anterior);
+            assertTrue(actual.compareTo(new BigDecimal("5.00")) <= 0);
+            anterior = actual;
         }
     }
 
