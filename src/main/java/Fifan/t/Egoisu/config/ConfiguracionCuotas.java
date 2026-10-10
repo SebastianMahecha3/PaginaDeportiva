@@ -28,20 +28,23 @@ public class ConfiguracionCuotas {
     private int valoracionPartidosEquivalentes = 5;
 
     /**
-     * Límites de cuota para TODOS los mercados (se aplican después de calcular la cuota).
-     * El máximo baja de 10.00 a 5.00 para que las probabilidades pequeñas no generen cuotas enormes.
+     * Límites de cuota para TODOS los mercados (1X2, goles, goleador, tiros y corners).
+     * Todas las cuotas viven en la banda 1.10 - 1.50: el favorito de un partido queda cerca de 1.10 y el
+     * resultado más improbable se acerca a 1.50 sin pasarlo.
      */
     private BigDecimal cuotaMinima = new BigDecimal("1.10");
-    private BigDecimal cuotaMaxima = new BigDecimal("5.00");
+    private BigDecimal cuotaMaxima = new BigDecimal("1.50");
 
     /**
-     * Compresión suave hacia el tope (para que probabilidades distintas NO terminen todas en 5.00).
-     * Hasta compresionInicio la cuota no se toca; por encima, la parte sobrante se curva asintóticamente hacia cuotaMaxima:
+     * Curva de compresión: convierte la cuota bruta 1/(p × (1 + margen)) en una cuota dentro de la banda.
+     * Hasta compresionInicio la cuota no se toca (por debajo de ese valor queda en cuotaMinima); por encima, el exceso
+     * se curva asintóticamente hacia cuotaMaxima, sin tocarla nunca:
      *   cuota = inicio + (maxima - inicio) × exceso / (exceso + escala),  exceso = cuotaBruta - inicio.
-     * Una escala mayor curva más despacio (más diferencia entre jugadores improbables).
+     * compresionInicio debe ser igual a cuotaMinima. Una escala MENOR sube las cuotas más rápido hacia 1.50
+     * (cuotas más parecidas entre sí); una escala MAYOR las deja más cerca de 1.10 (más separación entre mercados).
      */
-    private BigDecimal compresionInicio = new BigDecimal("4.00");
-    private BigDecimal compresionEscala = new BigDecimal("15");
+    private BigDecimal compresionInicio = new BigDecimal("1.10");
+    private BigDecimal compresionEscala = new BigDecimal("2");
 
     /**
      * Factor de posición del mercado GOLEADOR: multiplica la probabilidad de gol del jugador (Poisson).

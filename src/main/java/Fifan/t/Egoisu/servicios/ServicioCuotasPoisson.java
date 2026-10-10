@@ -45,20 +45,19 @@ import org.springframework.transaction.annotation.Transactional;
  *    goleador: P = 1 - exp(-λ_equipo × parte_del_jugador), donde la parte depende de su POSICIÓN, su MEDIA (1-99)
  *    y sus goles anteriores. Sobre esa P se aplica al final un factor de posición (ver ajustarPorPosicion).
  * 4) Cuota final = 1 / (p × (1 + margen)) con margen 5% aplicado una sola vez (la comisión de la apuesta NO entra aquí;
- *    vive solo en CalculadoraApuesta y afecta únicamente al pago). Si la cuota bruta pasa de compresionInicio (4.00),
- *    el exceso se comprime suavemente hacia 5.00 (nunca lo supera). Después se acota entre cuotaMinima (1.10) y
- *    cuotaMaxima (5.00), con 2 decimales (HALF_UP).
+ *    vive solo en CalculadoraApuesta y afecta únicamente al pago). La cuota bruta se comprime con una curva suave
+ *    (desde compresionInicio = 1.10 hacia 1.50, sin llegar a pasarlo) y luego se acota entre cuotaMinima (1.10) y
+ *    cuotaMaxima (1.50), con 2 decimales (HALF_UP). Así todas las cuotas quedan entre 1.10 y 1.50.
  *
  * Qué NO cambió en esta versión: la fórmula de λ (promedio de liga × ataque × debilidad del rival, con historial y
  * local/visitante), el modelo de Poisson (1X2, goles, tiros, corners, goleador), el historial (general + como
  * local/visitante, goles a favor/en contra, partidos jugados) y k = 5. Lo ÚNICO que cambia en λ: cuando n = 0, el
  * ataque/debilidad por valoración ahora se suaviza con k (antes entraba sin suavizar). Con historial, λ es idéntico.
  * El resto del cambio está en la capa probabilidad -> cuota:
- *  - Tope 5.00 en todos los mercados: con cuotas más bajas la casa paga menos por eventos improbables y se evitan
- *    cuotas "enormes". Un corte duro dejaba a todo jugador poco probable en 5.00 exacto; por eso, cerca del tope la
- *    cuota se curva en vez de cortarse, y cuanto menos probable es el evento, más se acerca a 5.00 sin igualarlo.
+ *  - Banda 1.10 - 1.50 en todos los mercados: la cuota bruta se curva en vez de cortarse, así que un evento menos
+ *    probable siempre tiene cuota igual o mayor (se nota la diferencia entre favorito y no favorito) y nunca pasa de 1.50.
  *  - Primer partido (n = 0): la valoración inicial sigue siendo el punto de partida del ataque/defensa (λ intacto), pero
- *    la cuota pasa por el MISMO aCuota (margen, piso de p, 1.10 / 5.00, 2 decimales); no hay sistema aparte. El
+ *    la cuota pasa por el MISMO aCuota (margen, piso de p, 1.10 / 1.50, 2 decimales); no hay sistema aparte. El
  *    suavizado k también se aplica a la valoración (suavizarNivel), así el primer partido no produce λ extremos.
  *  - Goleadores: factor de posición sobre la probabilidad final (único ajuste específico de un mercado).
  */
@@ -148,10 +147,10 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
      * ÚNICO punto donde una probabilidad se convierte en cuota (lo usan todos los mercados):
      *   1) cuota bruta = 1 / (p × (1 + margen))      (margen aplicado una sola vez; sin comisión). p solo se acota a
      *      un mínimo técnico para no dividir por cero; ya NO se usa un piso de p que igualaba todas las cuotas altas.
-     *   2) comprimir(): por encima de compresionInicio la cuota se curva hacia cuotaMaxima sin llegar a ella.
+     *   2) comprimir(): la cuota bruta se curva desde compresionInicio (1.10) hacia cuotaMaxima (1.50) sin llegar a ella.
      *   3) cuota = max(cuotaMinima, min(cuota, cuotaMaxima)), redondeada a 2 decimales.
      * Límites aplicados DESPUÉS de calcular la cuota: ningún mercado (1X2, goles, goleador, tiros, corners)
-     * puede salir por encima de 5.00 ni por debajo de 1.10. La comisión no interviene en ningún paso.
+     * puede salir por encima de 1.50 ni por debajo de 1.10. La comisión no interviene en ningún paso.
      * La compresión es monótona: menos probabilidad => cuota igual o mayor, así que la posición y la media de un
      * jugador siguen notándose aunque la cuota esté cerca del tope. Nunca sube una cuota (la compresión solo la baja).
      */
@@ -164,7 +163,10 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
         return cuota.setScale(2, RoundingMode.HALF_UP);
     }
 
-    /** cuota = inicio + (maxima - inicio) × exceso / (exceso + escala); sin cambios si la cuota no pasa de inicio. */
+    /**
+     * cuota = inicio + (maxima - inicio) × exceso / (exceso + escala); sin cambios si la cuota no pasa de inicio.
+     * Es creciente: más cuota bruta => más cuota final, siempre por debajo de cuotaMaxima.
+     */
     private BigDecimal comprimir(BigDecimal cuota) {
         BigDecimal inicio = config.getCompresionInicio();
         BigDecimal rango = config.getCuotaMaxima().subtract(inicio, MC);
@@ -183,7 +185,7 @@ public class ServicioCuotasPoisson implements ServicioCuotas {
      * reemplaza el modelo. Como la cuota es 1 / (p × (1 + margen)), a mayor factor menor cuota, por eso:
      *   delantero (factor mayor) < mediocampista < defensa < portero (factor menor)   en cuota,
      * porque marcar es más probable cuanto más ofensiva es la posición. Los factores son moderados (ver
-     * ConfiguracionCuotas) para no volver a inflar cuotas; la compresión hacia 5.00 y el piso 1.10 se aplican después en aCuota.
+     * ConfiguracionCuotas) para no volver a inflar cuotas; la compresión hacia 1.50 y el piso 1.10 se aplican después en aCuota.
      */
     BigDecimal ajustarPorPosicion(BigDecimal p, PosicionJugador posicion) {
         return p.multiply(factorPosicion(posicion), MC);
